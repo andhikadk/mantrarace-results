@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'raceresult' => [
+        'timeout' => env('RACERESULT_TIMEOUT', 30),
+        'cache_ttl' => env('RACERESULT_CACHE_TTL', 60),
+    ],
+
 ];
