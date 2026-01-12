@@ -1,5 +1,4 @@
 import { type Event } from '@/types';
-import { Calendar, MapPin } from 'lucide-react';
 
 interface Props {
     event: Event;
@@ -10,7 +9,7 @@ export function EventHeader({ event, isLive }: Props) {
     return (
         <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white">
             <div className="mx-auto max-w-5xl px-4 py-8">
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3">
                     {isLive && (
                         <div className="flex items-center gap-2">
                             <span className="relative flex h-3 w-3">
@@ -25,21 +24,16 @@ export function EventHeader({ event, isLive }: Props) {
                         {event.title}
                     </h1>
 
-                    <div className="flex flex-wrap items-center gap-4 text-slate-300">
-                        <div className="flex items-center gap-1.5">
-                            <MapPin className="h-4 w-4" />
-                            <span>{event.location}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <Calendar className="h-4 w-4" />
-                            <span>
-                                {new Date(event.start_date).toLocaleDateString('id-ID', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                })}
-                            </span>
-                        </div>
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
+                        <span>{event.location}</span>
+                        <span>•</span>
+                        <span>
+                            {new Date(event.start_date).toLocaleDateString('id-ID', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric',
+                            })}
+                        </span>
                     </div>
                 </div>
             </div>

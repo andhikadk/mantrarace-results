@@ -1,8 +1,13 @@
 import { cn } from '@/lib/utils';
-import { type Category } from '@/types';
+
+interface CategoryInfo {
+    id: number;
+    name: string;
+    slug: string;
+}
 
 interface Props {
-    categories: Category[];
+    categories: CategoryInfo[];
     activeSlug: string;
     onSelect: (slug: string) => void;
 }

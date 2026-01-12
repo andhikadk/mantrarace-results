@@ -82,8 +82,8 @@ class RaceResultService
             name: $cp->name,
             time: $this->cleanTimeValue($cp->time_field ? ($row[$cp->time_field] ?? null) : null),
             segment: $this->cleanTimeValue($cp->segment_field ? ($row[$cp->segment_field] ?? null) : null),
-            overallRank: $cp->overall_rank_field ? ($row[$cp->overall_rank_field] ?? null) : null,
-            genderRank: $cp->gender_rank_field ? ($row[$cp->gender_rank_field] ?? null) : null,
+            overallRank: $this->toNullableInt($cp->overall_rank_field ? ($row[$cp->overall_rank_field] ?? null) : null),
+            genderRank: $this->toNullableInt($cp->gender_rank_field ? ($row[$cp->gender_rank_field] ?? null) : null),
         ))->all();
     }
 
@@ -130,5 +130,14 @@ class RaceResultService
 
         // Trim leading/trailing colons
         return trim($cleaned, ':');
+    }
+
+    private function toNullableInt(mixed $value): ?int
+    {
+        if ($value === null || $value === '' || $value === 'N/A' || $value === '-') {
+            return null;
+        }
+
+        return (int) $value;
     }
 }

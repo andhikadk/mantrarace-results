@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils';
-import { RankBadge } from './rank-badge';
 
 export interface Participant {
     overallRank: number;
@@ -73,7 +72,7 @@ function getFlag(nation: string): string {
     return FLAG_MAP[key] || '🏳️';
 }
 
-function getGenderLabel(gender: string): string {
+function getGenderIcon(gender: string): string {
     const g = gender?.toUpperCase()?.charAt(0);
     if (g === 'M') return '♂';
     if (g === 'F' || g === 'W') return '♀';
@@ -99,7 +98,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
         <button
             onClick={onClick}
             className={cn(
-                'w-full text-left rounded-lg border bg-white p-4 transition-all hover:shadow-md hover:border-slate-300',
+                'w-full text-left rounded-lg border bg-white p-3 sm:p-4 transition-all hover:shadow-md hover:border-slate-300',
                 participant.overallRank <= 3 && 'border-l-4',
                 participant.overallRank === 1 && 'border-l-amber-400',
                 participant.overallRank === 2 && 'border-l-slate-400',
@@ -107,23 +106,32 @@ export function ParticipantCard({ participant, onClick }: Props) {
             )}
         >
             <div className="flex items-start gap-3">
-                <RankBadge rank={participant.overallRank} />
+                <div className="flex gap-2">
+                    <div className="text-center min-w-[50px]">
+                        <div className="text-[10px] uppercase text-slate-400 font-medium">Overall</div>
+                        <div className="text-lg font-bold text-slate-900">#{participant.overallRank}</div>
+                    </div>
+                    <div className="text-center min-w-[50px]">
+                        <div className="text-[10px] uppercase text-slate-400 font-medium">
+                            {getGenderIcon(participant.gender)} Rank
+                        </div>
+                        <div className="text-lg font-bold text-slate-900">#{participant.genderRank}</div>
+                    </div>
+                </div>
 
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                         <span className="font-semibold text-slate-900 truncate">
                             {participant.name}
                         </span>
-                        <span className="text-lg" title={participant.nation}>
+                        <span className="text-base" title={participant.nation}>
                             {getFlag(participant.nation)}
                         </span>
                     </div>
 
-                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
-                        <span className="font-mono">#{participant.bib}</span>
-                        <span>{getGenderLabel(participant.gender)}</span>
-                        <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">
-                            GR #{participant.genderRank}
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                        <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
+                            BIB {participant.bib}
                         </span>
                         {participant.club && (
                             <span className="truncate max-w-[120px]" title={participant.club}>
@@ -133,10 +141,10 @@ export function ParticipantCard({ participant, onClick }: Props) {
                     </div>
                 </div>
 
-                <div className="text-right">
+                <div className="text-right shrink-0">
                     {isFinished ? (
                         <>
-                            <div className="font-mono text-lg font-semibold text-slate-900">
+                            <div className="font-mono text-base sm:text-lg font-bold text-slate-900">
                                 {participant.finishTime}
                             </div>
                             {participant.gap && (
