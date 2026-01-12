@@ -41,13 +41,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Public Results Routes
-Route::get('/{event:slug}', [EventController::class, 'show'])->name('events.show');
+// Public Results Routes
+Route::get('/{event:slug}/categories/{category:slug}/certificate/{bib}', [CertificateController::class, 'show'])
+    ->where('bib', '[0-9A-Za-z\-]+')
+    ->name('certificates.show');
 
 Route::get('/{event:slug}/categories/{category:slug}', [CategoryController::class, 'show'])
     ->name('categories.show');
 
-Route::get('/{event:slug}/categories/{category:slug}/certificate/{bib}', [CertificateController::class, 'show'])
-    ->where('bib', '[0-9A-Za-z\-]+')
-    ->name('certificates.show');
+Route::get('/{event:slug}', [EventController::class, 'show'])->name('events.show');
 
 require __DIR__.'/settings.php';

@@ -24,7 +24,7 @@ class RaceResultService
     public function getLeaderboard(Category $category): Collection
     {
         $cacheKey = "raceresult:{$category->id}";
-        $ttl = config('services.raceresult.cache_ttl', 60);
+        $ttl = 5;
 
         $rawData = Cache::remember($cacheKey, $ttl, function () use ($category) {
             return $this->client->fetchResults($category->endpoint_url);
@@ -34,7 +34,9 @@ class RaceResultService
 
         return collect($rawData)
             ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints))
-            ->sortBy('overallRank')
+            ->sortBy(fn (ParticipantData $participant) => $participant->overallRank > 0
+                ? $participant->overallRank
+                : PHP_INT_MAX)
             ->values();
     }
 

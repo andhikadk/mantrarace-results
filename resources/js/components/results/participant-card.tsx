@@ -1,5 +1,3 @@
-import { cn } from '@/lib/utils';
-
 export interface Participant {
     overallRank: number;
     genderRank: number;
@@ -72,90 +70,136 @@ function getFlag(nation: string): string {
     return FLAG_MAP[key] || '🏳️';
 }
 
-function getGenderIcon(gender: string): string {
-    const g = gender?.toUpperCase()?.charAt(0);
-    if (g === 'M') return '♂';
-    if (g === 'F' || g === 'W') return '♀';
-    return '';
-}
-
 function getStatusBadge(status: string) {
     const s = status?.toUpperCase();
+    if (s === 'FINISHED') {
+        return <span className="inline-flex rounded-full bg-green-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700">FINISHED</span>;
+    }
     if (s === 'DNF') {
-        return <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">DNF</span>;
+        return <span className="inline-flex rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">DNF</span>;
     }
     if (s === 'DNS') {
-        return <span className="rounded bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600">DNS</span>;
+        return <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-600">DNS</span>;
     }
-    return null;
+    // Default / On Race
+    return <span className="inline-flex rounded-full bg-yellow-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-yellow-700">ON RACE</span>;
 }
 
 export function ParticipantCard({ participant, onClick }: Props) {
-    const isFinished = participant.status?.toUpperCase() === 'FINISHED' ||
-        (participant.finishTime && !['DNF', 'DNS'].includes(participant.status?.toUpperCase()));
+    // Determine explicit status for badge logic
+    const status = participant.status?.toUpperCase() || '';
+    let displayStatus = status;
+    if (!displayStatus) {
+        displayStatus = participant.finishTime ? 'FINISHED' : 'ON RACE';
+    }
+
+    if (status === 'DNF') displayStatus = 'DNF';
+    if (status === 'DNS') displayStatus = 'DNS';
 
     return (
         <button
+            type="button"
             onClick={onClick}
-            className={cn(
-                'w-full text-left rounded-lg border bg-white p-3 sm:p-4 transition-all hover:shadow-md hover:border-slate-300',
-                participant.overallRank <= 3 && 'border-l-4',
-                participant.overallRank === 1 && 'border-l-amber-400',
-                participant.overallRank === 2 && 'border-l-slate-400',
-                participant.overallRank === 3 && 'border-l-orange-400',
-            )}
+            className="w-full rounded-md border border-slate-200 bg-white p-5 text-left shadow-none transition-colors hover:border-slate-300 md:rounded-none md:border-x-0 md:border-t-0 md:px-0 md:py-4"
         >
-            <div className="flex items-start gap-3">
-                <div className="flex gap-2">
-                    <div className="text-center min-w-[50px]">
-                        <div className="text-[10px] uppercase text-slate-400 font-medium">Overall</div>
-                        <div className="text-lg font-bold text-slate-900">#{participant.overallRank}</div>
-                    </div>
-                    <div className="text-center min-w-[50px]">
-                        <div className="text-[10px] uppercase text-slate-400 font-medium">
-                            {getGenderIcon(participant.gender)} Rank
-                        </div>
-                        <div className="text-lg font-bold text-slate-900">#{participant.genderRank}</div>
-                    </div>
+            {/* Mobile Card */}
+            <div className="md:hidden">
+                <div className="mb-4 flex items-center gap-3">
+                    <span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-sm border border-slate-200 bg-slate-50 text-lg">
+                        {getFlag(participant.nation)}
+                    </span>
+                    <span className="text-base font-bold uppercase tracking-tight text-slate-900">
+                        {participant.name}
+                    </span>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-900 truncate">
-                            {participant.name}
+                <div className="grid grid-cols-[auto_1fr_auto] gap-x-8 gap-y-4">
+                    <div className="flex flex-col items-center">
+                        <span className="font-mono text-3xl font-bold italic leading-none text-red-600">
+                            {participant.overallRank > 0 ? participant.overallRank.toString().padStart(2, '0') : '-'}
                         </span>
-                        <span className="text-base" title={participant.nation}>
-                            {getFlag(participant.nation)}
-                        </span>
+                        <span className="text-[10px] font-bold uppercase text-slate-400">RANK</span>
                     </div>
 
-                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-                        <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
-                            BIB {participant.bib}
-                        </span>
-                        {participant.club && (
-                            <span className="truncate max-w-[120px]" title={participant.club}>
-                                {participant.club}
-                            </span>
-                        )}
-                    </div>
-                </div>
-
-                <div className="text-right shrink-0">
-                    {isFinished ? (
-                        <>
-                            <div className="font-mono text-base sm:text-lg font-bold text-slate-900">
-                                {participant.finishTime}
+                    <div className="flex flex-col justify-between">
+                        <div>
+                            <div className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">BIB</div>
+                            <div className="text-xs font-bold text-slate-700">
+                                {participant.bib}
                             </div>
-                            {participant.gap && (
-                                <div className="text-xs text-slate-500">
-                                    +{participant.gap}
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        getStatusBadge(participant.status)
-                    )}
+                            <div className="mt-2 text-[10px] font-bold uppercase text-slate-400 mb-0.5">GENDER</div>
+                            <div className="text-xs font-bold text-slate-700">
+                                {participant.gender?.toUpperCase() || '-'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col items-end justify-between">
+                        <div>
+                            <div className="mb-1 text-right text-[10px] font-bold uppercase text-slate-400">STATUS</div>
+                            {getStatusBadge(displayStatus)}
+                        </div>
+                        <div className="text-right">
+                            <div className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">TIME</div>
+                            <div className="font-mono text-base font-bold text-slate-900">
+                                {participant.finishTime || '--:--:--'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Desktop Row */}
+            <div className="hidden md:flex md:items-center md:gap-6">
+                <div className="w-14 text-center">
+                    <div className="font-mono text-xl font-bold italic text-red-600">
+                        {participant.overallRank > 0 ? participant.overallRank.toString().padStart(2, '0') : '-'}
+                    </div>
+                    <div className="text-[10px] font-bold uppercase text-slate-400">RANK</div>
+                </div>
+
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-sm border border-slate-200 bg-slate-50 text-lg">
+                        {getFlag(participant.nation)}
+                    </span>
+                    <div className="min-w-0">
+                        <div className="truncate text-sm font-bold uppercase text-slate-900">
+                            {participant.name}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="w-20 text-right">
+                    <div className="text-[10px] font-bold uppercase text-slate-400">BIB</div>
+                    <div className="text-sm font-semibold text-slate-700">
+                        {participant.bib}
+                    </div>
+                </div>
+
+                <div className="w-20 text-right">
+                    <div className="text-[10px] font-bold uppercase text-slate-400">GENDER</div>
+                    <div className="text-sm font-semibold text-slate-700">
+                        {participant.gender?.toUpperCase() || '-'}
+                    </div>
+                </div>
+
+                <div className="w-28 text-right">
+                    <div className="text-[10px] font-bold uppercase text-slate-400">TIME</div>
+                    <div className="font-mono text-sm font-semibold text-slate-900">
+                        {participant.finishTime || '--:--:--'}
+                    </div>
+                </div>
+
+                <div className="w-20 text-right">
+                    <div className="text-[10px] font-bold uppercase text-slate-400">GAP</div>
+                    <div className="font-mono text-xs font-medium text-slate-500">
+                        {participant.gap || '-'}
+                    </div>
+                </div>
+
+                <div className="w-24 text-right">
+                    <div className="text-[10px] font-bold uppercase text-slate-400">STATUS</div>
+                    {getStatusBadge(displayStatus)}
                 </div>
             </div>
         </button>

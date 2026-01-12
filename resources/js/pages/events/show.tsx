@@ -4,11 +4,10 @@ import { EventHeader } from '@/components/results/event-header';
 import { ParticipantCard, type Participant } from '@/components/results/participant-card';
 import { ParticipantModal } from '@/components/results/participant-modal';
 import { SearchFilters } from '@/components/results/search-filters';
-import { StatsBar } from '@/components/results/stats-bar';
 import { type Event } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface CategoryInfo {
     id: number;
@@ -26,44 +25,44 @@ interface Props {
 }
 
 const ITEMS_PER_PAGE = 10;
+const DEFAULT_GENDER_FILTER = 'all';
+const FILTER_LOADING_DELAY = 200;
 
 export default function EventShow({ event, categories, activeCategory, leaderboard, isLive }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [genderFilter, setGenderFilter] = useState('all');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [genderFilter, setGenderFilter] = useState(DEFAULT_GENDER_FILTER);
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
+    const [isFiltering, setIsFiltering] = useState(false);
+    const [isLoadingCategory, setIsLoadingCategory] = useState(false);
+    const filterTimeoutRef = useRef<number | null>(null);
 
     const filteredLeaderboard = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
         return leaderboard.filter((p) => {
-            if (searchQuery) {
-                const q = searchQuery.toLowerCase();
-                const matchBib = p.bib.toLowerCase().includes(q);
-                const matchName = p.name.toLowerCase().includes(q);
-                const matchClub = p.club?.toLowerCase().includes(q);
+            if (query) {
+                const matchBib = p.bib.toLowerCase().includes(query);
+                const matchName = p.name.toLowerCase().includes(query);
+                const matchClub = p.club?.toLowerCase().includes(query);
                 if (!matchBib && !matchName && !matchClub) return false;
             }
 
             if (genderFilter !== 'all') {
-                const g = p.gender?.toUpperCase()?.charAt(0);
-                if (g !== genderFilter) return false;
-            }
-
-            if (statusFilter !== 'all') {
-                const s = p.status?.toUpperCase();
-                if (statusFilter === 'finished') {
-                    const isFinished = s === 'FINISHED' || (p.finishTime && !['DNF', 'DNS'].includes(s));
-                    if (!isFinished) return false;
-                } else if (statusFilter === 'dnf' && s !== 'DNF') {
-                    return false;
-                } else if (statusFilter === 'dns' && s !== 'DNS') {
-                    return false;
+                const gender = (p.gender ?? '').toString().trim().toUpperCase();
+                if (genderFilter === 'M') {
+                    if (gender !== 'MALE') return false;
+                } else if (genderFilter === 'F') {
+                    if (gender !== 'FEMALE') return false;
                 }
             }
 
             return true;
         });
-    }, [leaderboard, searchQuery, genderFilter, statusFilter]);
+    }, [leaderboard, searchQuery, genderFilter]);
+
+    const orderedCategories = useMemo(() => {
+        return [...categories].sort((a, b) => a.id - b.id);
+    }, [categories]);
 
     const totalPages = Math.ceil(filteredLeaderboard.length / ITEMS_PER_PAGE);
 
@@ -74,25 +73,55 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchQuery, genderFilter, statusFilter]);
+    }, [searchQuery, genderFilter]);
 
-    const stats = useMemo(() => {
-        const finishers = leaderboard.filter((p) => {
-            const s = p.status?.toUpperCase();
-            return s === 'FINISHED' || (p.finishTime && !['DNF', 'DNS'].includes(s));
-        });
-        return {
-            total: leaderboard.length,
-            finishers: finishers.length,
-            bestTime: finishers[0]?.finishTime ?? null,
-        };
-    }, [leaderboard]);
+    useEffect(() => {
+        setSearchQuery('');
+        setGenderFilter(DEFAULT_GENDER_FILTER);
+        setCurrentPage(1);
+        setSelectedParticipant(null);
+        setIsFiltering(false);
+        setIsLoadingCategory(false);
+        if (filterTimeoutRef.current) {
+            window.clearTimeout(filterTimeoutRef.current);
+            filterTimeoutRef.current = null;
+        }
+    }, [activeCategory?.slug]);
+
+    // Derived stats removed as StatsBar is removed
 
     const handleCategorySelect = useCallback((slug: string) => {
-        router.visit(`/${event.slug}/categories/${slug}`, {
+        if (slug === activeCategory?.slug) return;
+        router.visit(`/${event.slug}`, {
             preserveScroll: true,
+            preserveState: true,
+            data: { category: slug },
+            only: ['leaderboard', 'activeCategory'],
+            onStart: () => setIsLoadingCategory(true),
+            onFinish: () => setIsLoadingCategory(false),
         });
-    }, [event.slug]);
+    }, [event.slug, activeCategory?.slug]);
+
+    const triggerFilterLoading = useCallback(() => {
+        setIsFiltering(true);
+        if (filterTimeoutRef.current) {
+            window.clearTimeout(filterTimeoutRef.current);
+        }
+        filterTimeoutRef.current = window.setTimeout(() => {
+            setIsFiltering(false);
+            filterTimeoutRef.current = null;
+        }, FILTER_LOADING_DELAY);
+    }, []);
+
+    const handleSearch = useCallback((value: string) => {
+        triggerFilterLoading();
+        setSearchQuery(value);
+    }, [triggerFilterLoading]);
+
+    const handleGenderFilter = useCallback((value: string) => {
+        triggerFilterLoading();
+        setGenderFilter(value);
+    }, [triggerFilterLoading]);
 
     useEffect(() => {
         if (!isLive) return;
@@ -108,38 +137,40 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
         <>
             <Head title={`${event.title} - Results`} />
 
-            <div className="min-h-screen bg-slate-50">
+            <div className="min-h-screen bg-slate-50 pb-12">
                 <EventHeader event={event} isLive={isLive} />
 
                 {categories.length > 1 && (
                     <CategoryTabs
-                        categories={categories}
+                        categories={orderedCategories}
                         activeSlug={activeCategory?.slug ?? ''}
                         onSelect={handleCategorySelect}
                     />
                 )}
 
-                <StatsBar
-                    totalParticipants={stats.total}
-                    finishers={stats.finishers}
-                    bestTime={stats.bestTime}
-                />
-
                 <SearchFilters
-                    onSearch={setSearchQuery}
-                    onGenderFilter={setGenderFilter}
-                    onStatusFilter={setStatusFilter}
-                    resultCount={filteredLeaderboard.length}
+                    query={searchQuery}
+                    genderFilter={genderFilter}
+                    onSearch={handleSearch}
+                    onGenderFilter={handleGenderFilter}
                 />
 
-                <div className="mx-auto max-w-5xl px-4 py-4">
+                <div className="mx-auto max-w-6xl px-4 py-4 relative">
+                    {(isFiltering || isLoadingCategory) && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-50/80">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Loading results...
+                            </div>
+                        </div>
+                    )}
                     {paginatedLeaderboard.length === 0 ? (
                         <div className="py-12 text-center text-slate-500">
                             No results found
                         </div>
                     ) : (
                         <>
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 {paginatedLeaderboard.map((participant) => (
                                     <ParticipantCard
                                         key={participant.bib}
@@ -150,16 +181,17 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                             </div>
 
                             {totalPages > 1 && (
-                                <div className="mt-6 flex items-center justify-center gap-2">
+                                <div className="mt-8 flex items-center justify-center gap-2">
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                                         disabled={currentPage === 1}
+                                        className="h-8 w-8 p-0"
                                     >
                                         <ChevronLeft className="h-4 w-4" />
                                     </Button>
-                                    <span className="text-sm text-slate-600">
+                                    <span className="text-sm font-medium text-slate-600 px-2">
                                         {currentPage} / {totalPages}
                                     </span>
                                     <Button
@@ -167,6 +199,7 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                                         size="sm"
                                         onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                                         disabled={currentPage === totalPages}
+                                        className="h-8 w-8 p-0"
                                     >
                                         <ChevronRight className="h-4 w-4" />
                                     </Button>

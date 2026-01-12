@@ -1,4 +1,5 @@
 import { type Event } from '@/types';
+import { Share2 } from 'lucide-react';
 
 interface Props {
     event: Event;
@@ -7,34 +8,34 @@ interface Props {
 
 export function EventHeader({ event, isLive }: Props) {
     return (
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white">
-            <div className="mx-auto max-w-5xl px-4 py-8">
-                <div className="flex flex-col gap-3">
-                    {isLive && (
-                        <div className="flex items-center gap-2">
-                            <span className="relative flex h-3 w-3">
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500"></span>
-                            </span>
-                            <span className="text-sm font-medium text-red-400">LIVE</span>
-                        </div>
-                    )}
+        <div className="bg-white pt-6 pb-2">
+            <div className="mx-auto max-w-5xl px-4">
+                <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-1">
+                        {isLive && (
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-red-600"></span>
+                                </span>
+                                <span className="text-[10px] font-bold tracking-widest text-red-600 uppercase">
+                                    LIVE RESULTS
+                                </span>
+                            </div>
+                        )}
 
-                    <h1 className="text-2xl font-bold md:text-3xl lg:text-4xl">
-                        {event.title}
-                    </h1>
-
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
-                        <span>{event.location}</span>
-                        <span>•</span>
-                        <span>
-                            {new Date(event.start_date).toLocaleDateString('id-ID', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric',
-                            })}
-                        </span>
+                        <h1 className="text-xl font-black uppercase italic tracking-tight text-[#1a2744] md:text-3xl">
+                            {event.title}
+                        </h1>
                     </div>
+
+                    <button
+                        type="button"
+                        aria-label="Share event"
+                        className="rounded-full bg-slate-100 p-2 text-[#1a2744] transition-colors hover:bg-slate-200"
+                    >
+                        <Share2 className="h-5 w-5" />
+                    </button>
                 </div>
             </div>
         </div>

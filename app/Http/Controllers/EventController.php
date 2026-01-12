@@ -5,15 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Services\RaceResultService;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class EventController extends Controller
 {
-    public function show(Event $event, RaceResultService $service): Response
+    public function show(Event $event, Request $request, RaceResultService $service): Response
     {
         $event->load('categories.checkpoints', 'categories.certificate');
-        $defaultCategory = $event->categories->first();
+        $requestedCategory = $request->query('category');
+        $defaultCategory = $requestedCategory
+            ? ($event->categories->firstWhere('slug', $requestedCategory) ?? $event->categories->first())
+            : $event->categories->first();
 
         $leaderboard = $defaultCategory
             ? $service->getLeaderboard($defaultCategory)
@@ -39,4 +43,3 @@ class EventController extends Controller
         ]);
     }
 }
-

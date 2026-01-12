@@ -25,15 +25,15 @@ readonly class ParticipantData
     public function toArray(): array
     {
         return [
-            'overall_rank' => $this->overallRank,
-            'gender_rank' => $this->genderRank,
+            'overallRank' => $this->overallRank,
+            'genderRank' => $this->genderRank,
             'bib' => $this->bib,
             'name' => $this->name,
             'gender' => $this->gender,
             'nation' => $this->nation,
             'club' => $this->club,
-            'finish_time' => $this->finishTime,
-            'net_time' => $this->netTime,
+            'finishTime' => $this->finishTime,
+            'netTime' => $this->netTime,
             'gap' => $this->gap,
             'status' => $this->status,
             'checkpoints' => array_map(fn (CheckpointData $cp) => $cp->toArray(), $this->checkpoints),

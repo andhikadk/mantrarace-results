@@ -5,7 +5,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Download, X } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { type Participant } from './participant-card';
 import { RankBadge } from './rank-badge';
 
@@ -21,12 +21,13 @@ interface Props {
 export function ParticipantModal({ participant, open, onClose, eventSlug, categorySlug, certificateEnabled }: Props) {
     if (!participant) return null;
 
-    const isFinished = participant.status?.toUpperCase() === 'FINISHED' ||
-        (participant.finishTime && !['DNF', 'DNS'].includes(participant.status?.toUpperCase()));
+    const status = participant.status?.toUpperCase() || '';
+    const isFinished = status === 'FINISHED'
+        || (!!participant.finishTime && !['DNF', 'DNS'].includes(status));
 
     return (
         <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-3">
                         <RankBadge rank={participant.overallRank} />
@@ -79,7 +80,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                 {participant.checkpoints.map((cp, index) => (
                                     <div
                                         key={index}
-                                        className="flex items-center justify-between rounded-lg border p-3"
+                                        className="flex items-center justify-between rounded-md border border-slate-200 p-3"
                                     >
                                         <div>
                                             <div className="font-medium">{cp.name}</div>

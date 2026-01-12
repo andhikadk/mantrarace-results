@@ -14,23 +14,28 @@ interface Props {
 
 export function CategoryTabs({ categories, activeSlug, onSelect }: Props) {
     return (
-        <div className="border-b bg-white sticky top-0 z-10">
-            <div className="mx-auto max-w-5xl px-4">
-                <div className="flex gap-1 overflow-x-auto py-2 scrollbar-hide">
-                    {categories.map((category) => (
-                        <button
-                            key={category.id}
-                            onClick={() => onSelect(category.slug)}
-                            className={cn(
-                                'whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors',
-                                activeSlug === category.slug
-                                    ? 'bg-slate-900 text-white'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            )}
-                        >
-                            {category.name}
-                        </button>
-                    ))}
+        <div className="sticky top-0 z-20 bg-white shadow-sm">
+            <div className="mx-auto max-w-5xl">
+                <div className="flex w-full">
+                    {categories.map((category) => {
+                        const isActive = activeSlug === category.slug;
+                        return (
+                            <button
+                                key={category.id}
+                                type="button"
+                                onClick={() => onSelect(category.slug)}
+                                aria-pressed={isActive}
+                                className={cn(
+                                    'flex-1 py-4 text-center text-sm font-bold uppercase tracking-wider transition-colors',
+                                    isActive
+                                        ? 'border-b-2 border-red-600 text-slate-900'
+                                        : 'border-b border-transparent text-slate-400 hover:text-slate-600'
+                                )}
+                            >
+                                {category.name}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
         </div>
