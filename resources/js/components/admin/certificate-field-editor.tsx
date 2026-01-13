@@ -4,13 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Trash2, Settings2, Upload } from 'lucide-react';
+import { Plus, Trash2, Settings2, Upload, RefreshCw } from 'lucide-react';
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export interface CertificateField {
     type: string;
@@ -26,9 +21,9 @@ export interface CertificateField {
     field?: string;
     uppercase?: boolean;
     customText?: string;
-    customFontUrl?: string; // URL for custom uploaded font
-    customFontName?: string; // Display name for custom font
-    maxLength?: number; // Max characters, truncate logic if exceeded
+    customFontUrl?: string;
+    customFontName?: string;
+    maxLength?: number;
 }
 
 export interface FieldsConfig {
@@ -40,7 +35,7 @@ interface Props {
     config: FieldsConfig | null;
     templatePath: string | null;
     onChange: (config: FieldsConfig) => void;
-    sampleData?: { name: string; bib: string; rank: number; genderRank: number; finishTime: string; gender: string };
+    categorySlug: string;
 }
 
 const FIELD_TYPES = [
@@ -65,35 +60,20 @@ const DEFAULT_CONFIG: FieldsConfig = {
     pageSize: { width: 842, height: 595 },
 };
 
-const DEFAULT_SAMPLE = { name: 'John Doe', bib: '1234', rank: 1, genderRank: 1, finishTime: '02:34:56', gender: 'Male' };
-
-export function CertificateFieldEditor({ config, templatePath, onChange, sampleData = DEFAULT_SAMPLE }: Props) {
+export function CertificateFieldEditor({ config, templatePath, onChange, categorySlug }: Props) {
     const [localConfig, setLocalConfig] = useState<FieldsConfig>(config ?? DEFAULT_CONFIG);
     const [selectedFieldIndex, setSelectedFieldIndex] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
-    const [pdfSize, setPdfSize] = useState({ width: 0, height: 0 });
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [isLoadingPreview, setIsLoadingPreview] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [containerWidth, setContainerWidth] = useState(500);
-    const [previewText, setPreviewText] = useState('John Doe'); // Custom preview text
 
-    // Sync localConfig with prop when it changes (e.g., after save)
+    // Sync localConfig with prop when it changes
     useEffect(() => {
         if (config) {
             setLocalConfig(config);
         }
     }, [config]);
-
-    useEffect(() => {
-        if (containerRef.current) {
-            const observer = new ResizeObserver((entries) => {
-                for (const entry of entries) {
-                    setContainerWidth(entry.contentRect.width);
-                }
-            });
-            observer.observe(containerRef.current);
-            return () => observer.disconnect();
-        }
-    }, [isOpen]);
 
     const updateConfig = useCallback((newConfig: FieldsConfig) => {
         setLocalConfig(newConfig);
@@ -104,25 +84,58 @@ export function CertificateFieldEditor({ config, templatePath, onChange, sampleD
     const removeField = (i: number) => { updateConfig({ ...localConfig, fields: localConfig.fields.filter((_, idx) => idx !== i) }); setSelectedFieldIndex(null); };
     const updateField = (i: number, u: Partial<CertificateField>) => { const f = [...localConfig.fields]; f[i] = { ...f[i], ...u }; updateConfig({ ...localConfig, fields: f }); };
 
-    // Track loaded custom fonts
-    const [loadedFonts, setLoadedFonts] = useState<Set<string>>(new Set());
+    // Fetch preview from server with debouncing
+    useEffect(() => {
+        if (!isOpen || !templatePath) return;
 
-    // Load custom font for preview
-    const loadCustomFont = useCallback((url: string, name: string) => {
-        if (loadedFonts.has(url)) return;
-        const fontFace = new FontFace(name, `url(${url})`);
-        fontFace.load().then((loaded) => {
-            document.fonts.add(loaded);
-            setLoadedFonts(prev => new Set(prev).add(url));
-        }).catch(err => console.error('Font load error:', err));
-    }, [loadedFonts]);
+        const timeoutId = setTimeout(async () => {
+            setIsLoadingPreview(true);
+            try {
+                // Get CSRF token
+                const xsrfToken = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('XSRF-TOKEN='))
+                    ?.split('=')[1];
+
+                const response = await fetch(`/admin/categories/${categorySlug}/certificate/preview`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-XSRF-TOKEN': decodeURIComponent(xsrfToken || ''),
+                        'Accept': 'application/pdf',
+                    },
+                    body: JSON.stringify({ fields_config: localConfig }),
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    setPreviewUrl(url);
+                }
+            } catch (err) {
+                console.error('Preview fetch error:', err);
+            } finally {
+                setIsLoadingPreview(false);
+            }
+        }, 800); // 800ms debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [localConfig, isOpen, templatePath, categorySlug]);
+
+    // Cleanup preview URL on unmount
+    useEffect(() => {
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, [previewUrl]);
 
     // Handle font file upload
     const handleFontUpload = async (fieldIndex: number, file: File) => {
         const formData = new FormData();
         formData.append('font', file);
 
-        // Get CSRF token from cookie
         const xsrfToken = document.cookie
             .split('; ')
             .find(row => row.startsWith('XSRF-TOKEN='))
@@ -139,86 +152,18 @@ export function CertificateFieldEditor({ config, templatePath, onChange, sampleD
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Upload failed: ${response.status} ${errorText}`);
+                throw new Error(`Upload failed: ${response.status}`);
             }
 
             const data = await response.json();
             if (data.url) {
                 updateField(fieldIndex, { customFontUrl: data.url, customFontName: data.name, fontFamily: 'custom' });
-                loadCustomFont(data.url, data.name);
             }
         } catch (err) {
             console.error('Font upload error:', err);
             alert('Failed to upload font. Please try again.');
         }
     };
-
-    // Load existing custom fonts on mount
-    useEffect(() => {
-        localConfig.fields.forEach(field => {
-            if (field.customFontUrl && field.customFontName) {
-                loadCustomFont(field.customFontUrl, field.customFontName);
-            }
-        });
-    }, [localConfig.fields, loadCustomFont]);;
-
-    const getPreviewValue = (f: CertificateField): string => {
-        // Use customText if set, otherwise use default sample data
-        let value: string;
-        if (f.customText) {
-            value = f.customText;
-        } else {
-            const map: Record<string, string> = {
-                participant_name: previewText || sampleData.name,
-                overall_rank: `${f.prefix ?? ''}${sampleData.rank}${f.suffix ?? ''}`,
-                gender_rank: `${f.prefix ?? ''}${sampleData.genderRank}${f.suffix ?? ''}`,
-                finish_time: sampleData.finishTime,
-                bib: sampleData.bib,
-                category_name: '55K',
-                event_name: 'Trail Running Event',
-                event_date: '12 Jan 2026',
-                custom: 'Custom Text',
-            };
-            value = map[f.type] || 'Value';
-        }
-
-        // Apply truncation logic if maxLength is set
-        if (f.maxLength && value.length > f.maxLength) {
-            const words = value.split(' ');
-            if (words.length > 1) {
-                // Try abbreviating words from the end until it fits
-                let abbreviated = words.slice();
-                for (let i = words.length - 1; i >= 1; i--) {
-                    abbreviated[i] = abbreviated[i].charAt(0).toUpperCase();
-                    // Reconstruct string to check length
-                    const currentString = abbreviated.join(' ');
-                    if (currentString.length <= f.maxLength) {
-                        value = currentString;
-                        break;
-                    }
-                    // If still doesn't fit after abbreviating all transferable words, keeps the last state
-                    if (i === 1) value = currentString;
-                }
-            } else {
-                // Single word, just truncate
-                value = value.substring(0, f.maxLength);
-            }
-        }
-
-        return f.uppercase ? value.toUpperCase() : value;
-    };
-
-    const onPdfLoad = ({ width, height }: { width: number; height: number }) => {
-        setPdfSize({ width, height });
-        if (width !== localConfig.pageSize.width || height !== localConfig.pageSize.height) {
-            updateConfig({ ...localConfig, pageSize: { width, height } });
-        }
-    };
-
-    // Calculate scale to fit container - full width
-    const pdfWidth = containerWidth - 20;
-    const scale = pdfSize.width > 0 ? pdfWidth / pdfSize.width : 1;
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -233,60 +178,28 @@ export function CertificateFieldEditor({ config, templatePath, onChange, sampleD
                 </DialogHeader>
 
                 <div className="flex-1 overflow-hidden flex">
-                    {/* PDF Preview - Left Side */}
-                    <div ref={containerRef} className="flex-1 overflow-auto p-4 bg-slate-100 border-r">
-                        <div className="relative" style={{ width: pdfWidth, height: pdfSize.height * scale }}>
-                            {templatePath && (
-                                <Document
-                                    file={`/storage/${templatePath}`}
-                                    loading={<div className="p-8 text-slate-400">Loading PDF...</div>}
-                                    error={<div className="p-8 text-red-500">Failed to load PDF</div>}
-                                >
-                                    <Page pageNumber={1} width={pdfWidth} onLoadSuccess={onPdfLoad} renderTextLayer={false} renderAnnotationLayer={false} />
-                                </Document>
-                            )}
-
-                            {/* Field Overlays - positioned within PDF bounds */}
-                            {pdfSize.width > 0 && localConfig.fields.map((field, i) => {
-                                // Calculate position based on alignment
-                                // For center: anchor point is center of text
-                                // For right: anchor point is right edge of text
-                                // left position should be: x, x - width/2, x - width respectively
-                                const getTransform = () => {
-                                    if (field.align === 'center') return 'translateX(-50%)';
-                                    if (field.align === 'right') return 'translateX(-100%)';
-                                    return 'none';
-                                };
-
-
-                                console.log(`Field ${i}: x=${field.x}, y=${field.y}, align=${field.align}, scaled_x=${field.x * scale}`);
-
-                                return (
-                                    <div
-                                        key={i}
-                                        className={`absolute cursor-pointer px-1 ${selectedFieldIndex === i ? 'ring-2 ring-blue-500 bg-blue-100/70' : 'hover:bg-yellow-200/50'}`}
-                                        style={{
-                                            top: `${field.y * scale}px`,
-                                            ...(field.align === 'center'
-                                                ? { left: '50%', transform: 'translateX(-50%)' }
-                                                : field.align === 'right'
-                                                    ? { right: `${(pdfSize.width - field.x) * scale}px` }
-                                                    : { left: `${field.x * scale}px` }),
-                                            fontSize: Math.max(10, field.fontSize * scale),
-                                            fontFamily: field.fontFamily === 'custom' && field.customFontName
-                                                ? field.customFontName
-                                                : field.fontFamily === 'times' ? 'Times New Roman' : field.fontFamily,
-                                            fontWeight: field.fontWeight === 'bold' ? 700 : 400,
-                                            color: field.color,
-                                            whiteSpace: 'nowrap' as const,
-                                        }}
-                                        onClick={() => setSelectedFieldIndex(i)}
-                                    >
-                                        {getPreviewValue(field)}
-                                    </div>
-                                );
-                            })}
-                        </div>
+                    {/* PDF Preview - Left Side (Server-side rendered) */}
+                    <div ref={containerRef} className="flex-1 overflow-auto p-4 bg-slate-100 border-r flex items-center justify-center">
+                        {isLoadingPreview && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-slate-100/80 z-10">
+                                <div className="flex items-center gap-2 text-slate-500">
+                                    <RefreshCw className="h-5 w-5 animate-spin" />
+                                    <span>Generating preview...</span>
+                                </div>
+                            </div>
+                        )}
+                        {previewUrl ? (
+                            <object
+                                data={previewUrl}
+                                type="application/pdf"
+                                className="w-full h-full"
+                                style={{ maxHeight: 'calc(90vh - 120px)' }}
+                            >
+                                <div className="p-8 text-red-500">Failed to load preview</div>
+                            </object>
+                        ) : (
+                            <div className="text-slate-400">Open dialog to generate preview</div>
+                        )}
                     </div>
 
                     {/* Fields Panel - Right Side */}
@@ -296,15 +209,6 @@ export function CertificateFieldEditor({ config, templatePath, onChange, sampleD
                             <Button size="sm" variant="outline" onClick={addField}>
                                 <Plus className="h-3 w-3 mr-1" /> Add
                             </Button>
-                        </div>
-                        <div className="px-4 py-2 border-b bg-slate-50">
-                            <Label className="text-[10px] text-slate-500">Preview Name</Label>
-                            <Input
-                                className="h-7 text-xs"
-                                placeholder="Sample name for preview"
-                                value={previewText}
-                                onChange={(e) => setPreviewText(e.target.value)}
-                            />
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-3 space-y-3">

@@ -15,30 +15,41 @@ class CertificateService
     public function generate(Category $category, array $participant): ?string
     {
         $certificate = $category->certificate;
-        
+
         if (!$certificate || !$certificate->enabled || !$certificate->template_path) {
             return null;
         }
 
-        $templatePath = Storage::disk('public')->path($certificate->template_path);
-        
-        if (!file_exists($templatePath)) {
+        return $this->generateWithConfig($category, $participant, $certificate->fields_config ?? $this->getDefaultConfig());
+    }
+
+    /**
+     * Generate certificate PDF with custom field configuration (for preview)
+     */
+    public function generateWithConfig(Category $category, array $participant, array $fieldsConfig): ?string
+    {
+        $certificate = $category->certificate;
+
+        if (!$certificate || !$certificate->template_path) {
             return null;
         }
 
-        // Get field configuration or use default
-        $fieldsConfig = $certificate->fields_config ?? $this->getDefaultConfig();
+        $templatePath = Storage::disk('public')->path($certificate->template_path);
+
+        if (!file_exists($templatePath)) {
+            return null;
+        }
 
         // Create PDF with FPDI using Points as unit matches React-PDF output
         $pdf = new Fpdi('L', 'pt');
         // Disable auto page break to prevent unwanted breaks
         $pdf->SetAutoPageBreak(false);
-        
+
         // Import template
         $pdf->setSourceFile($templatePath);
         $templateId = $pdf->importPage(1);
         $size = $pdf->getTemplateSize($templateId);
-        
+
         // Add page with same size/orientation as template
         $orientation = $size['width'] > $size['height'] ? 'L' : 'P';
         $pdf->AddPage($orientation, [$size['width'], $size['height']]);
@@ -131,6 +142,11 @@ class CertificateService
     {
         $type = $field['type'] ?? 'custom';
 
+        // If customText is set, use it for all field types (for preview/testing)
+        if (!empty($field['customText'])) {
+            return $field['customText'];
+        }
+
         return match ($type) {
             'participant_name' => $participant['name'] ?? null,
             'overall_rank' => isset($participant['overallRank']) ? (string) $participant['overallRank'] : (isset($participant['rank']) ? (string) $participant['rank'] : null),
@@ -142,7 +158,7 @@ class CertificateService
             'gender' => $participant['gender'] ?? null,
             'event_name' => $category->event?->title,
             'event_date' => $category->event?->start_date?->format('d M Y'),
-            'custom' => $field['customText'] ?? $field['field'] ?? 'Custom Text', // Prefer customText config
+            'custom' => $field['field'] ?? 'Custom Text',
             default => null,
         };
     }

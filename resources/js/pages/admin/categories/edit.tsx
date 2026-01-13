@@ -405,10 +405,11 @@ export default function CategoryEdit({ category }: Props) {
                                     <CertificateFieldEditor
                                         config={certForm.data.fields_config as never}
                                         templatePath={category.certificate.template_path}
+                                        categorySlug={category.slug}
                                         onChange={(config) => certForm.setData('fields_config', config)}
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        Configure field positions and styling for the certificate.
+                                        Configure field positions and styling for the certificate. Preview is server-side rendered for 100% accuracy.
                                     </p>
                                 </div>
                             )}

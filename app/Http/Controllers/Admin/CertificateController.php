@@ -8,6 +8,7 @@ use App\Services\CertificateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 
 class CertificateController extends Controller
 {
@@ -81,5 +82,46 @@ class CertificateController extends Controller
         return redirect()
             ->route('admin.categories.edit', $category)
             ->with('success', 'Certificate template removed.');
+    }
+
+    /**
+     * Generate a preview PDF with the given field configuration
+     */
+    public function preview(Request $request, Category $category): Response
+    {
+        $validated = $request->validate([
+            'fields_config' => 'required|array',
+        ]);
+
+        $certificate = $category->certificate;
+
+        if (!$certificate || !$certificate->template_path) {
+            return response('No certificate template found', 404);
+        }
+
+        // Generate PDF with sample data using the provided config
+        $sampleData = [
+            'name' => 'John Doe',
+            'bib' => '1234',
+            'rank' => 1,
+            'overallRank' => 1,
+            'genderRank' => 1,
+            'finishTime' => '02:34:56',
+            'netTime' => '02:30:00',
+            'gender' => 'Male',
+        ];
+
+        $pdfContent = $this->certificateService->generateWithConfig(
+            $category,
+            $sampleData,
+            $validated['fields_config']
+        );
+
+        if (!$pdfContent) {
+            return response('Failed to generate preview', 500);
+        }
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf');
     }
 }
