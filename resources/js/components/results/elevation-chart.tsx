@@ -20,34 +20,44 @@ interface Props {
 
 export function ElevationChart({ data, waypoints = [] }: Props) {
     const { options, series } = useMemo(() => {
-        const distances = data.map((p) => p.distance.toFixed(1));
+        // Format data as [x, y] pairs for numeric x-axis
+        const chartData = data.map((p) => ({
+            x: p.distance,
+            y: p.elevation,
+        }));
+
         const elevations = data.map((p) => p.elevation);
         const minEle = Math.min(...elevations);
         const maxEle = Math.max(...elevations);
+        const maxDistance = data[data.length - 1]?.distance || 0;
 
-        // Create annotations for waypoints
-        const waypointAnnotations = waypoints.map((wp) => {
-            // Find closest elevation point index for this waypoint
-            const closestIndex = data.reduce((prevIdx, curr, idx, arr) =>
-                Math.abs(curr.distance - wp.distance) < Math.abs(arr[prevIdx].distance - wp.distance) ? idx : prevIdx
-                , 0);
-
-            return {
-                x: distances[closestIndex],
-                borderColor: '#100d67',
-                label: {
-                    borderColor: '#100d67',
-                    style: {
-                        color: '#fff',
-                        background: '#100d67',
-                        fontSize: '10px',
-                        fontWeight: 'bold',
+        // Create xaxis annotations for waypoints (vertical lines)
+        const xaxisAnnotations = waypoints.map((wp) => ({
+            x: wp.distance,
+            borderColor: '#f00102',
+            strokeDashArray: 0,
+            label: {
+                borderColor: '#f00102',
+                borderWidth: 1,
+                borderRadius: 2,
+                text: wp.name,
+                textAnchor: 'middle',
+                position: 'top',
+                orientation: 'horizontal',
+                style: {
+                    color: '#fff',
+                    background: '#f00102',
+                    fontSize: '9px',
+                    fontWeight: '600',
+                    padding: {
+                        left: 4,
+                        right: 4,
+                        top: 2,
+                        bottom: 2,
                     },
-                    text: wp.name,
-                    position: 'top' as const,
                 },
-            };
-        });
+            },
+        }));
 
         const chartOptions: ApexOptions = {
             chart: {
@@ -82,15 +92,16 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
                 padding: { left: 10, right: 10 },
             },
             annotations: {
-                xaxis: waypointAnnotations,
+                xaxis: xaxisAnnotations,
             },
             xaxis: {
-                categories: distances,
+                type: 'numeric',
+                min: 0,
+                max: maxDistance,
                 labels: {
-                    formatter: (val: string) => `${val} km`,
+                    formatter: (val: number) => `${val.toFixed(0)} km`,
                     style: { fontSize: '10px', colors: '#94a3b8' },
                     rotate: 0,
-                    hideOverlappingLabels: true,
                 },
                 tickAmount: 6,
                 axisBorder: { show: false },
@@ -110,8 +121,7 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
                 enabled: true,
                 theme: 'light',
                 x: {
-                    formatter: (_val: number, opts: { dataPointIndex: number }) =>
-                        `${distances[opts.dataPointIndex]} km`,
+                    formatter: (val: number) => `${val.toFixed(1)} km`,
                 },
                 y: { formatter: (val: number) => `${val} m` },
             },
@@ -120,7 +130,7 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
 
         return {
             options: chartOptions,
-            series: [{ name: 'Elevation', data: elevations }],
+            series: [{ name: 'Elevation', data: chartData }],
         };
     }, [data, waypoints]);
 
@@ -131,16 +141,9 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
     return (
         <div className="bg-white border-b border-slate-200">
             <div className="mx-auto max-w-6xl px-4 py-3">
-                <div className="flex items-center justify-between mb-1">
-                    <div className="text-[10px] font-bold uppercase text-slate-400">ELEVATION PROFILE</div>
-                    {waypoints.length > 0 && (
-                        <div className="text-[10px] text-slate-400">
-                            {waypoints.length} checkpoint{waypoints.length > 1 ? 's' : ''}
-                        </div>
-                    )}
-                </div>
-                <div className="h-[120px] md:h-[150px]">
+                <div className="h-[160px] md:h-[240px]">
                     <Chart
+                        key={`elevation-${waypoints.length}-${data.length}`}
                         options={options}
                         series={series}
                         type="area"

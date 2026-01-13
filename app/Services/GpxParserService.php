@@ -9,14 +9,14 @@ class GpxParserService
     /**
      * Parse GPX file and extract elevation profile data with waypoints
      *
-     * @param string $gpxPath Path relative to storage
+     * @param  string  $gpxPath  Path relative to storage
      * @return array{elevation: array, waypoints: array}
      */
     public function parse(string $gpxPath): array
     {
         $fullPath = Storage::disk('public')->path($gpxPath);
 
-        if (!file_exists($fullPath)) {
+        if (! file_exists($fullPath)) {
             return ['elevation' => [], 'waypoints' => []];
         }
 
@@ -30,7 +30,7 @@ class GpxParserService
 
         // Parse elevation data from track points
         $elevationData = $this->parseElevationPoints($xml);
-        
+
         // Parse waypoints (checkpoints / POI)
         $waypoints = $this->parseWaypoints($xml, $elevationData);
 
@@ -46,6 +46,7 @@ class GpxParserService
     public function parseElevation(string $gpxPath): array
     {
         $result = $this->parse($gpxPath);
+
         return $result['elevation'];
     }
 
@@ -121,9 +122,19 @@ class GpxParserService
         }
 
         // Sort by distance
-        usort($waypoints, fn($a, $b) => $a['distance'] <=> $b['distance']);
+        usort($waypoints, fn ($a, $b) => $a['distance'] <=> $b['distance']);
 
-        return $waypoints;
+        // Remove duplicates by name
+        $seen = [];
+        $unique = [];
+        foreach ($waypoints as $wp) {
+            if (! isset($seen[$wp['name']])) {
+                $seen[$wp['name']] = true;
+                $unique[] = $wp;
+            }
+        }
+
+        return $unique;
     }
 
     private function findClosestDistance(float $lat, float $lon, array $elevationData): float
