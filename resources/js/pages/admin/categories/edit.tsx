@@ -7,11 +7,15 @@ import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Category, type Checkpoint } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { Plus, Trash2 } from 'lucide-react';
+import { FileUp, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface Props {
-    category: Category & { checkpoints: Checkpoint[]; certificate?: { template_path: string; enabled: boolean } | null };
+    category: Category & {
+        checkpoints: Checkpoint[];
+        certificate?: { template_path: string; enabled: boolean } | null;
+        gpx_path?: string | null;
+    };
 }
 
 export default function CategoryEdit({ category }: Props) {
@@ -32,6 +36,10 @@ export default function CategoryEdit({ category }: Props) {
     const certForm = useForm<{ template: File | null; enabled: boolean }>({
         template: null,
         enabled: category.certificate?.enabled ?? false,
+    });
+
+    const gpxForm = useForm<{ gpx_file: File | null }>({
+        gpx_file: null,
     });
 
     const [showNewCheckpoint, setShowNewCheckpoint] = useState(false);
@@ -59,6 +67,19 @@ export default function CategoryEdit({ category }: Props) {
     const handleDeleteCertificate = () => {
         if (confirm('Remove certificate template?')) {
             router.delete(`/admin/categories/${category.slug}/certificate`);
+        }
+    };
+
+    const handleGpxSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        gpxForm.post(`/admin/categories/${category.slug}/gpx`, {
+            forceFormData: true,
+        });
+    };
+
+    const handleDeleteGpx = () => {
+        if (confirm('Remove GPX file?')) {
+            router.delete(`/admin/categories/${category.slug}/gpx`);
         }
     };
 
@@ -275,6 +296,55 @@ export default function CategoryEdit({ category }: Props) {
                                 </form>
                             </>
                         )}
+                    </CardContent>
+                </Card>
+
+                {/* GPX Settings */}
+                <Card className="max-w-3xl">
+                    <CardHeader>
+                        <CardTitle>GPX / Elevation Profile</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleGpxSubmit} className="space-y-4">
+                            {category.gpx_path ? (
+                                <div className="flex items-center gap-4 rounded-lg border p-4">
+                                    <FileUp className="h-5 w-5 text-muted-foreground" />
+                                    <div className="flex-1">
+                                        <div className="font-medium">Current GPX File</div>
+                                        <div className="text-sm text-muted-foreground truncate">
+                                            {category.gpx_path.split('/').pop()}
+                                        </div>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleDeleteGpx}
+                                    >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </div>
+                            ) : null}
+
+                            <div className="space-y-2">
+                                <Label htmlFor="gpx_file">Upload GPX File</Label>
+                                <Input
+                                    id="gpx_file"
+                                    type="file"
+                                    accept=".gpx,.xml"
+                                    onChange={(e) =>
+                                        gpxForm.setData('gpx_file', e.target.files?.[0] ?? null)
+                                    }
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Upload a GPX file to display elevation profile on the results page.
+                                </p>
+                            </div>
+
+                            <Button type="submit" disabled={gpxForm.processing || !gpxForm.data.gpx_file}>
+                                {gpxForm.processing ? 'Uploading...' : 'Upload GPX'}
+                            </Button>
+                        </form>
                     </CardContent>
                 </Card>
 

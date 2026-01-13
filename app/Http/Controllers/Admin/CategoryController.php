@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Event;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,6 +32,7 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
             'endpoint_url' => 'required|url|max:500',
+            'gpx_file' => 'nullable|file|max:10240',
         ]);
 
         if (empty($validated['slug'])) {
@@ -40,7 +42,18 @@ class CategoryController extends Controller
         // Ensure unique slug within event
         $validated['slug'] = $this->ensureUniqueSlug($event, $validated['slug']);
 
-        $event->categories()->create($validated);
+        // Handle GPX file upload
+        $gpxPath = null;
+        if ($request->hasFile('gpx_file')) {
+            $gpxPath = $request->file('gpx_file')->store('gpx', 'public');
+        }
+
+        $event->categories()->create([
+            'name' => $validated['name'],
+            'slug' => $validated['slug'],
+            'endpoint_url' => $validated['endpoint_url'],
+            'gpx_path' => $gpxPath,
+        ]);
 
         return redirect()
             ->route('admin.events.show', $event)
@@ -78,7 +91,11 @@ class CategoryController extends Controller
             $validated['slug'] = $this->ensureUniqueSlug($category->event, $validated['slug'], $category->id);
         }
 
-        $category->update($validated);
+        $category->update([
+            'name' => $validated['name'],
+            'slug' => $validated['slug'],
+            'endpoint_url' => $validated['endpoint_url'],
+        ]);
 
         return redirect()
             ->route('admin.events.show', $category->event)

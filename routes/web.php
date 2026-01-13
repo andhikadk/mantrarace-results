@@ -37,6 +37,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('categories.certificate.update');
         Route::delete('categories/{category}/certificate', [Admin\CertificateController::class, 'destroy'])
             ->name('categories.certificate.destroy');
+
+        // GPX upload/delete
+        Route::post('categories/{category}/gpx', [Admin\GpxController::class, 'update'])
+            ->name('categories.gpx.update');
+        Route::delete('categories/{category}/gpx', [Admin\GpxController::class, 'destroy'])
+            ->name('categories.gpx.destroy');
     });
 });
 

@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { CategoryTabs } from '@/components/results/category-tabs';
+import { ElevationChart } from '@/components/results/elevation-chart';
 import { EventHeader } from '@/components/results/event-header';
 import { ParticipantCard, type Participant } from '@/components/results/participant-card';
 import { ParticipantModal } from '@/components/results/participant-modal';
@@ -15,6 +16,18 @@ interface CategoryInfo {
     name: string;
     slug: string;
     certificateEnabled: boolean;
+    hasGpx: boolean;
+}
+
+interface ElevationPoint {
+    distance: number;
+    elevation: number;
+}
+
+interface ElevationWaypoint {
+    name: string;
+    distance: number;
+    elevation: number;
 }
 
 interface Props {
@@ -22,6 +35,8 @@ interface Props {
     categories: CategoryInfo[];
     activeCategory: { slug: string; certificateEnabled: boolean } | null;
     leaderboard: Participant[];
+    elevationData: ElevationPoint[];
+    elevationWaypoints: ElevationWaypoint[];
     isLive: boolean;
 }
 
@@ -29,7 +44,7 @@ const ITEMS_PER_PAGE = 10;
 const DEFAULT_GENDER_FILTER = 'all';
 const FILTER_LOADING_DELAY = 200;
 
-export default function EventShow({ event, categories, activeCategory, leaderboard, isLive }: Props) {
+export default function EventShow({ event, categories, activeCategory, leaderboard, elevationData, elevationWaypoints, isLive }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
     const [genderFilter, setGenderFilter] = useState(DEFAULT_GENDER_FILTER);
     const [currentPage, setCurrentPage] = useState(1);
@@ -93,7 +108,7 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
             preserveScroll: true,
             preserveState: true,
             data: { category: slug },
-            only: ['leaderboard', 'activeCategory'],
+            only: ['leaderboard', 'activeCategory', 'elevationData', 'elevationWaypoints'],
             onStart: () => setIsLoadingCategory(true),
             onFinish: () => setIsLoadingCategory(false),
         });
@@ -136,6 +151,10 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
 
             <div className="min-h-screen bg-[#efefef] pb-12">
                 <EventHeader event={event} isLive={isLive} />
+
+                {elevationData.length > 0 && (
+                    <ElevationChart data={elevationData} waypoints={elevationWaypoints} />
+                )}
 
                 {categories.length > 1 && (
                     <CategoryTabs
