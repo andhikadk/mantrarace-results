@@ -63,6 +63,32 @@ class CertificateService
         $suffix = $field['suffix'] ?? '';
         $text = $prefix . $value . $suffix;
 
+        // Apply truncation if maxLength is set
+        if (!empty($field['maxLength']) && strlen($text) > $field['maxLength']) {
+            $maxLength = (int) $field['maxLength'];
+            $words = explode(' ', $text);
+            if (count($words) > 1) {
+                // Try abbreviating words from the end until it fits
+                $abbreviated = $words;
+                for ($i = count($words) - 1; $i >= 1; $i--) {
+                    $abbreviated[$i] = strtoupper(substr($abbreviated[$i], 0, 1));
+                    $currentString = implode(' ', $abbreviated);
+                    if (strlen($currentString) <= $maxLength) {
+                        $text = $currentString;
+                        break;
+                    }
+                    if ($i === 1) $text = $currentString; 
+                }
+            } else {
+                $text = substr($text, 0, $maxLength);
+            }
+        }
+
+        // Apply uppercase
+        if (!empty($field['uppercase'])) {
+            $text = strtoupper($text);
+        }
+
         // Set font
         $fontFamily = $this->mapFontFamily($field['fontFamily'] ?? 'helvetica');
         $fontStyle = $this->mapFontStyle($field['fontWeight'] ?? 'normal');
@@ -110,7 +136,7 @@ class CertificateService
             'gender' => $participant['gender'] ?? null,
             'event_name' => $category->event?->title,
             'event_date' => $category->event?->start_date?->format('d M Y'),
-            'custom' => $participant[$field['field'] ?? ''] ?? null,
+            'custom' => $field['customText'] ?? $field['field'] ?? 'Custom Text', // Prefer customText config
             default => null,
         };
     }

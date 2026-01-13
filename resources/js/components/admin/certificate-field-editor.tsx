@@ -28,6 +28,7 @@ export interface CertificateField {
     customText?: string;
     customFontUrl?: string; // URL for custom uploaded font
     customFontName?: string; // Display name for custom font
+    maxLength?: number; // Max characters, truncate logic if exceeded
 }
 
 export interface FieldsConfig {
@@ -181,6 +182,30 @@ export function CertificateFieldEditor({ config, templatePath, onChange, sampleD
             };
             value = map[f.type] || 'Value';
         }
+
+        // Apply truncation logic if maxLength is set
+        if (f.maxLength && value.length > f.maxLength) {
+            const words = value.split(' ');
+            if (words.length > 1) {
+                // Try abbreviating words from the end until it fits
+                let abbreviated = words.slice();
+                for (let i = words.length - 1; i >= 1; i--) {
+                    abbreviated[i] = abbreviated[i].charAt(0).toUpperCase();
+                    // Reconstruct string to check length
+                    const currentString = abbreviated.join(' ');
+                    if (currentString.length <= f.maxLength) {
+                        value = currentString;
+                        break;
+                    }
+                    // If still doesn't fit after abbreviating all transferable words, keeps the last state
+                    if (i === 1) value = currentString;
+                }
+            } else {
+                // Single word, just truncate
+                value = value.substring(0, f.maxLength);
+            }
+        }
+
         return f.uppercase ? value.toUpperCase() : value;
     };
 
@@ -380,6 +405,16 @@ export function CertificateFieldEditor({ config, templatePath, onChange, sampleD
                                                 placeholder="Leave empty for auto"
                                                 value={field.customText ?? ''}
                                                 onChange={(e) => updateField(i, { customText: e.target.value || undefined })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-[10px] text-slate-500">Max Length (0 = No Limit)</Label>
+                                            <Input
+                                                type="number"
+                                                className="h-8 text-xs"
+                                                placeholder="e.g. 15"
+                                                value={field.maxLength ?? ''}
+                                                onChange={(e) => updateField(i, { maxLength: +e.target.value || undefined })}
                                             />
                                         </div>
                                     </CardContent>
