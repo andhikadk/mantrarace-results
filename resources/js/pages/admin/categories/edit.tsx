@@ -4,6 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { CertificateFieldEditor, type FieldsConfig } from '@/components/admin/certificate-field-editor';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Category, type Checkpoint } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
@@ -13,7 +14,7 @@ import { useState } from 'react';
 interface Props {
     category: Category & {
         checkpoints: Checkpoint[];
-        certificate?: { template_path: string; enabled: boolean } | null;
+        certificate?: { template_path: string; enabled: boolean; fields_config?: unknown } | null;
         gpx_path?: string | null;
     };
 }
@@ -33,9 +34,10 @@ export default function CategoryEdit({ category }: Props) {
         endpoint_url: category.endpoint_url,
     });
 
-    const certForm = useForm<{ template: File | null; enabled: boolean }>({
+    const certForm = useForm<{ template: File | null; enabled: boolean; fields_config: FieldsConfig | null | object }>({
         template: null,
         enabled: category.certificate?.enabled ?? false,
+        fields_config: category.certificate?.fields_config ?? null,
     });
 
     const gpxForm = useForm<{ gpx_file: File | null }>({
@@ -395,6 +397,21 @@ export default function CategoryEdit({ category }: Props) {
                                     }
                                 />
                             </div>
+
+                            {/* Field Configuration */}
+                            {category.certificate?.template_path && (
+                                <div className="space-y-2">
+                                    <Label>Field Configuration</Label>
+                                    <CertificateFieldEditor
+                                        config={certForm.data.fields_config as never}
+                                        templatePath={category.certificate.template_path}
+                                        onChange={(config) => certForm.setData('fields_config', config)}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Configure field positions and styling for the certificate.
+                                    </p>
+                                </div>
+                            )}
 
                             <Button type="submit" disabled={certForm.processing}>
                                 {certForm.processing ? 'Uploading...' : 'Save Certificate Settings'}

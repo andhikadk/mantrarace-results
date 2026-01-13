@@ -14,7 +14,7 @@ interface Props {
 
 export function CategoryTabs({ categories, activeSlug, onSelect }: Props) {
     return (
-        <div className="sticky top-0 z-20 bg-[#efefef] border-b border-slate-200">
+        <div className="sticky top-0 z-20 bg-white border-b border-slate-200">
             <div className="mx-auto max-w-6xl">
                 <div className="flex w-full">
                     {categories.map((category) => {

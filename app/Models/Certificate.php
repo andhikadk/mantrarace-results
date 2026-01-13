@@ -12,6 +12,7 @@ class Certificate extends Model
     {
         return [
             'enabled' => 'boolean',
+            'fields_config' => 'array',
         ];
     }
 

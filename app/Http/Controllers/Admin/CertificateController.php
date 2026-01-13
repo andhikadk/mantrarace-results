@@ -4,17 +4,23 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Services\CertificateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class CertificateController extends Controller
 {
+    public function __construct(
+        private CertificateService $certificateService
+    ) {}
+
     public function update(Request $request, Category $category): RedirectResponse
     {
         $validated = $request->validate([
             'template' => 'nullable|file|mimes:pdf|max:10240', // max 10MB
             'enabled' => 'boolean',
+            'fields_config' => 'nullable|array',
         ]);
 
         $certificate = $category->certificate;
@@ -33,9 +39,19 @@ class CertificateController extends Controller
             $templatePath = $file->storeAs('certificates', basename($filename), 'public');
         }
 
+        // Validate fields config if provided
+        $fieldsConfig = $validated['fields_config'] ?? $certificate?->fields_config;
+        if ($fieldsConfig) {
+            $errors = $this->certificateService->validateConfig($fieldsConfig);
+            if (!empty($errors)) {
+                return back()->withErrors(['fields_config' => implode(', ', $errors)]);
+            }
+        }
+
         $data = [
             'template_path' => $templatePath,
             'enabled' => $validated['enabled'] ?? false,
+            'fields_config' => $fieldsConfig,
         ];
 
         if ($certificate) {

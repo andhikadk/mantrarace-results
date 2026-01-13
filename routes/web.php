@@ -43,6 +43,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('categories.gpx.update');
         Route::delete('categories/{category}/gpx', [Admin\GpxController::class, 'destroy'])
             ->name('categories.gpx.destroy');
+
+        // Font upload/list/delete
+        Route::get('fonts', [Admin\FontController::class, 'index'])->name('fonts.index');
+        Route::post('fonts', [Admin\FontController::class, 'store'])->name('fonts.store');
+        Route::delete('fonts', [Admin\FontController::class, 'destroy'])->name('fonts.destroy');
     });
 });
 

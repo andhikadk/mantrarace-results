@@ -141,7 +141,7 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
     return (
         <div className="bg-white border-b border-slate-200">
             <div className="mx-auto max-w-6xl px-4 py-3">
-                <div className="h-[160px] md:h-[240px]">
+                <div className="h-[200px] md:h-[240px]">
                     <Chart
                         key={`elevation-${waypoints.length}-${data.length}`}
                         options={options}
