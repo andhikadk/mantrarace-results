@@ -27,9 +27,8 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
 
     const displayStatus = getDisplayStatus(participant.status, participant.finishTime);
     const statusBadge = getStatusBadge(displayStatus);
-    const isFinished = displayStatus === 'FINISHED';
+    const isFinished = displayStatus === 'FINISHED' || !!participant.finishTime;
     const flagCode = getFlagCode(participant.nation);
-    const hasCheckpoints = participant.checkpoints.length > 0;
 
     return (
         <>
@@ -76,7 +75,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
 
                     <div className="p-5 space-y-5">
                         {/* Stats Section - 3 Columns */}
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 p-4 text-center">
                                 <div className="font-mono text-3xl font-bold italic text-[#f00102] dark:text-red-400">
                                     {participant.overallRank > 0 ? participant.overallRank.toString().padStart(2, '0') : '-'}
@@ -93,7 +92,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                     {normalizeGender(participant.gender)?.toUpperCase() || 'Gender'} Rank
                                 </div>
                             </div>
-                            <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 p-4 text-center">
+                            <div className="col-span-2 sm:col-span-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 p-4 text-center">
                                 <div className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">
                                     {participant.finishTime || '--:--:--'}
                                 </div>
@@ -126,18 +125,16 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                         )}
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col gap-2 pt-2">
-                            {/* Detail Profile Button */}
-                            {hasCheckpoints && (
-                                <Button
-                                    variant="outline"
-                                    className="w-full h-10"
-                                    onClick={() => setShowFullscreen(true)}
-                                >
-                                    <Maximize2 className="mr-2 h-4 w-4" />
-                                    Detail Profile
-                                </Button>
-                            )}
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                            {/* Detail Profile Button - Always visible */}
+                            <Button
+                                variant="outline"
+                                className={`w-full h-12 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 ${(!isFinished || !certificateEnabled) ? 'col-span-2' : ''}`}
+                                onClick={() => setShowFullscreen(true)}
+                            >
+                                <Maximize2 className="mr-2 h-4 w-4" />
+                                Detail Profile
+                            </Button>
 
                             {/* Certificate Button */}
                             {isFinished && certificateEnabled && (
@@ -148,7 +145,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                         rel="noopener noreferrer"
                                     >
                                         <Download className="mr-2 h-5 w-5" />
-                                        Download Certificate
+                                        Certificate
                                     </a>
                                 </Button>
                             )}
