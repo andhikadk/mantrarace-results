@@ -23,6 +23,7 @@ export interface CertificateField {
     customText?: string;
     customFontUrl?: string;
     customFontName?: string;
+    fpdfFontName?: string;
     maxLength?: number;
 }
 
@@ -157,7 +158,12 @@ export function CertificateFieldEditor({ config, templatePath, onChange, categor
 
             const data = await response.json();
             if (data.url) {
-                updateField(fieldIndex, { customFontUrl: data.url, customFontName: data.name, fontFamily: 'custom' });
+                updateField(fieldIndex, {
+                    customFontUrl: data.url,
+                    customFontName: data.name,
+                    fpdfFontName: data.fpdf_name,
+                    fontFamily: 'custom'
+                });
             }
         } catch (err) {
             console.error('Font upload error:', err);

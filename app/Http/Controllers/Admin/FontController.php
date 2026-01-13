@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\FontConverter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -11,10 +10,6 @@ use Illuminate\Support\Str;
 
 class FontController extends Controller
 {
-    public function __construct(
-        private FontConverter $fontConverter
-    ) {}
-
     public function store(Request $request): JsonResponse
     {
         $request->validate([
@@ -24,32 +19,17 @@ class FontController extends Controller
         $file = $request->file('font');
         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $safeName = Str::slug($originalName);
-        $extension = $file->getClientOriginalExtension();
-        $filename = "fonts/{$safeName}.{$extension}";
+        $extension = strtolower($file->getClientOriginalExtension());
 
-        // Store the original font file in public disk (for browser preview)
-        $path = $file->storeAs('fonts', basename($filename), 'public');
+        // Store font in public disk - mPDF can load TTF directly from here
+        $path = $file->storeAs('fonts', "{$safeName}.{$extension}", 'public');
 
-        // Convert to FPDF format and store in storage/app/fonts
-        $fullPath = Storage::disk('public')->path($path);
-
-        try {
-            $fpdfFontName = $this->fontConverter->convertToFpdfFormat($fullPath, $originalName);
-
-            return response()->json([
-                'path' => $path,
-                'name' => $originalName,
-                'url' => asset('storage/'.$path),
-                'fpdf_name' => $fpdfFontName,
-            ]);
-        } catch (\Exception $e) {
-            // If conversion fails, delete the uploaded file
-            Storage::disk('public')->delete($path);
-
-            return response()->json([
-                'error' => 'Failed to convert font: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'path' => $path,
+            'name' => $originalName,
+            'url' => asset('storage/'.$path),
+            'fpdf_name' => $safeName, // Keep for backwards compatibility
+        ]);
     }
 
     public function index(): JsonResponse
@@ -80,22 +60,10 @@ class FontController extends Controller
         ]);
 
         $path = $request->input('path');
-        $fontName = pathinfo($path, PATHINFO_FILENAME);
 
-        // Delete from public storage
+        // Delete from public storage only
         if (Storage::disk('public')->exists($path)) {
             Storage::disk('public')->delete($path);
-        }
-
-        // Also delete the converted FPDF font files
-        $fpdfPhpFile = storage_path("fonts/" . Str::slug($fontName) . ".php");
-        $fpdfTtfFile = storage_path("fonts/" . Str::slug($fontName) . ".ttf");
-
-        if (file_exists($fpdfPhpFile)) {
-            unlink($fpdfPhpFile);
-        }
-        if (file_exists($fpdfTtfFile)) {
-            unlink($fpdfTtfFile);
         }
 
         return response()->json(['success' => true]);

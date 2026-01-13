@@ -44,7 +44,7 @@ class CertificateController extends Controller
         $fieldsConfig = $validated['fields_config'] ?? $certificate?->fields_config;
         if ($fieldsConfig) {
             $errors = $this->certificateService->validateConfig($fieldsConfig);
-            if (!empty($errors)) {
+            if (! empty($errors)) {
                 return back()->withErrors(['fields_config' => implode(', ', $errors)]);
             }
         }
@@ -95,7 +95,7 @@ class CertificateController extends Controller
 
         $certificate = $category->certificate;
 
-        if (!$certificate || !$certificate->template_path) {
+        if (! $certificate || ! $certificate->template_path) {
             return response('No certificate template found', 404);
         }
 
@@ -114,10 +114,11 @@ class CertificateController extends Controller
         $pdfContent = $this->certificateService->generateWithConfig(
             $category,
             $sampleData,
-            $validated['fields_config']
+            $validated['fields_config'],
+            true // isPreview = true, so customText will be used
         );
 
-        if (!$pdfContent) {
+        if (! $pdfContent) {
             return response('Failed to generate preview', 500);
         }
 
