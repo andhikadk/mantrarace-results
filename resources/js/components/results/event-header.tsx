@@ -1,5 +1,4 @@
 import { type Event } from '@/types';
-import { Share2 } from 'lucide-react';
 
 interface Props {
     event: Event;
@@ -12,7 +11,7 @@ export function EventHeader({ event, isLive }: Props) {
             <div className="mx-auto max-w-6xl px-4">
                 <div className="flex items-start justify-between">
                     <div className="flex flex-col gap-1">
-                        {isLive && (
+                        {!isLive && (
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="relative flex h-2 w-2">
                                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#f00102]/40 opacity-75"></span>
@@ -28,14 +27,6 @@ export function EventHeader({ event, isLive }: Props) {
                             {event.title}
                         </h1>
                     </div>
-
-                    <button
-                        type="button"
-                        aria-label="Share event"
-                        className="rounded-full border border-slate-200 bg-white p-2 text-[#100d67] transition-colors hover:bg-slate-50"
-                    >
-                        <Share2 className="h-5 w-5" />
-                    </button>
                 </div>
             </div>
         </div>

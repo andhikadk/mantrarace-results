@@ -116,7 +116,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
                     </div> */}
 
                     <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <div className="min-w-0">
+                        <div className="min-w-0 ">
                             <div className="flex min-w-0 items-center gap-2">
                                 <span className="relative inline-flex min-w-[44px] items-center justify-center border border-[#100d67] bg-white px-2 py-0.5 font-mono text-xs font-extrabold text-[#100d67] shadow-[inset_0_0_0_1px_rgba(16,13,103,0.06)] ring-1 ring-slate-200">
                                     <span className="absolute left-1 top-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50" />
@@ -125,18 +125,17 @@ export function ParticipantCard({ participant, onClick }: Props) {
                                     <span className="absolute right-1 bottom-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50" />
                                     {participant.bib}
                                 </span>
-                                <span className="truncate text-sm font-bold uppercase text-slate-900">
-                                    {participant.name}
-                                </span>
-                                <span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-sm border border-slate-200 bg-slate-50 text-lg">
-                                    {getFlag(participant.nation)}
-                                </span>
-                            </div>
-                            {participant.club && (
-                                <div className="mt-0.5 truncate text-xs text-slate-500 pl-[52px]">
-                                    {participant.club}
+                                <div>
+                                    <span className="truncate text-sm font-bold uppercase text-slate-900">
+                                        {participant.name} {getFlag(participant.nation)}
+                                    </span>
+                                    {participant.club && (
+                                        <div className="mt-0.5 truncate text-xs text-slate-500 pl-[52px]">
+                                            {participant.club}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
 

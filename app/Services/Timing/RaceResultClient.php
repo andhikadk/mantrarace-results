@@ -5,6 +5,7 @@ namespace App\Services\Timing;
 use App\Contracts\TimingSystemInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\TransferStats;
 use Illuminate\Support\Facades\Log;
 
 class RaceResultClient implements TimingSystemInterface
@@ -26,6 +27,16 @@ class RaceResultClient implements TimingSystemInterface
                 'headers' => [
                     'Accept' => 'application/json',
                 ],
+                'on_stats' => function (TransferStats $stats) use ($endpointUrl) {
+                    $handler = $stats->getHandlerStats();
+                    Log::info('raceresult.http', [
+                        'endpoint' => $endpointUrl,
+                        'total_ms' => $stats->getTransferTime() * 1000,
+                        'namelookup_ms' => ($handler['namelookup_time'] ?? 0) * 1000,
+                        'connect_ms' => ($handler['connect_time'] ?? 0) * 1000,
+                        'starttransfer_ms' => ($handler['starttransfer_time'] ?? 0) * 1000,
+                    ]);
+                },
             ]);
 
             $contents = $response->getBody()->getContents();

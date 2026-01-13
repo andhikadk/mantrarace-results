@@ -16,6 +16,7 @@
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.9",
         "mpdf/mpdf": "^8.2",
+        "opcodesio/log-viewer": "^3.21",
         "phenx/php-font-lib": "^1.0",
         "setasign/fpdf": "^1.8",
         "setasign/fpdi": "^2.6"

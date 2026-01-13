@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Checkpoint;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class RaceResultService
 {
@@ -26,18 +27,35 @@ class RaceResultService
         $cacheKey = "raceresult:{$category->id}";
         $ttl = 5;
 
+        $start = microtime(true);
+        $cacheHit = Cache::has($cacheKey);
+
         $rawData = Cache::remember($cacheKey, $ttl, function () use ($category) {
             return $this->client->fetchResults($category->endpoint_url);
         });
 
+        Log::info('raceresult.fetch', [
+            'category_id' => $category->id,
+            'cache_hit' => $cacheHit,
+            'count' => count($rawData),
+            'ms' => (microtime(true) - $start) * 1000,
+        ]);
+
         $checkpoints = $category->checkpoints;
 
-        return collect($rawData)
+        $mapStart = microtime(true);
+        $mapped = collect($rawData)
             ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints))
             ->sortBy(fn (ParticipantData $participant) => $participant->overallRank > 0
                 ? $participant->overallRank
                 : PHP_INT_MAX)
             ->values();
+        Log::info('raceresult.map', [
+            'category_id' => $category->id,
+            'ms' => (microtime(true) - $mapStart) * 1000,
+        ]);
+
+        return $mapped;
     }
 
     /**

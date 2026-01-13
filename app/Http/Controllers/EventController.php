@@ -16,15 +16,16 @@ class EventController extends Controller
     {
         $event->load('categories.checkpoints', 'categories.certificate');
         $requestedCategory = $request->query('category');
+        $categories = $event->categories->sortBy('id');
+
         $defaultCategory = $requestedCategory
-            ? ($event->categories->firstWhere('slug', $requestedCategory) ?? $event->categories->first())
-            : $event->categories->first();
+            ? ($categories->firstWhere('slug', $requestedCategory) ?? $categories->first())
+            : $categories->first();
 
         $leaderboard = $defaultCategory
             ? $raceService->getLeaderboard($defaultCategory)
             : collect();
 
-        // Parse elevation data and waypoints from GPX if available
         $gpxData = ['elevation' => [], 'waypoints' => []];
         if ($defaultCategory && $defaultCategory->gpx_path) {
             $gpxData = $gpxService->parse($defaultCategory->gpx_path);
@@ -53,4 +54,3 @@ class EventController extends Controller
         ]);
     }
 }
-
