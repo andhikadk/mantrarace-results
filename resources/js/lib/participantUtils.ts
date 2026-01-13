@@ -67,16 +67,32 @@ export function getFlagCode(nation: string): string | null {
 export function getStatusBadge(status: string) {
     const s = status?.toUpperCase();
     if (s === 'FINISHED') {
-        return { label: 'FINISHED', bgClass: 'bg-green-100', textClass: 'text-green-700' };
+        return {
+            label: 'FINISHED',
+            bgClass: 'bg-green-100 dark:bg-green-900/30',
+            textClass: 'text-green-700 dark:text-green-300',
+        };
     }
     if (s === 'DNF') {
-        return { label: 'DNF', bgClass: 'bg-red-100', textClass: 'text-red-700' };
+        return {
+            label: 'DNF',
+            bgClass: 'bg-red-100 dark:bg-red-900/30',
+            textClass: 'text-red-700 dark:text-red-300',
+        };
     }
     if (s === 'DNS') {
-        return { label: 'DNS', bgClass: 'bg-slate-100', textClass: 'text-slate-600' };
+        return {
+            label: 'DNS',
+            bgClass: 'bg-slate-100 dark:bg-slate-800',
+            textClass: 'text-slate-600 dark:text-slate-300',
+        };
     }
     // Default / On Race
-    return { label: 'ON RACE', bgClass: 'bg-yellow-100', textClass: 'text-yellow-700' };
+    return {
+        label: 'ON RACE',
+        bgClass: 'bg-yellow-100 dark:bg-yellow-900/30',
+        textClass: 'text-yellow-700 dark:text-yellow-300',
+    };
 }
 
 export function getDisplayStatus(status: string, finishTime: string | null): string {

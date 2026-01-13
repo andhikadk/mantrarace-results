@@ -35,21 +35,21 @@ export function SearchFilters({
             : 'OVERALL';
 
     return (
-        <div className="bg-[#efefef] sticky top-[53px] z-10">
+        <div className="bg-[#efefef] dark:bg-slate-950 sticky top-[53px] z-10">
             <div className="mx-auto max-w-6xl px-4 py-4 space-y-4 md:space-y-0 md:flex md:items-center md:gap-4">
                 {/* Search Bar */}
                 <div className="relative md:flex-1">
-                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                     <Input
                         type="text"
                         placeholder="Search athlete or bib..."
                         value={query}
                         onChange={(e) => onSearch(e.target.value)}
-                        className="h-12 w-full rounded-md border border-slate-200 bg-white pl-11 shadow-none placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-[#100d67]/30"
+                        className="h-12 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-11 shadow-none placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-900 dark:text-slate-100 focus-visible:ring-1 focus-visible:ring-[#100d67]/30 dark:focus-visible:ring-slate-600"
                     />
                 </div>
 
-                <div className="flex rounded-md border border-slate-200 bg-white p-1 shadow-none md:min-w-[260px]">
+                <div className="flex rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shadow-none md:min-w-[260px]">
                     {(['OVERALL', 'MALE', 'FEMALE'] as const).map((tab) => (
                         <button
                             key={tab}
@@ -58,8 +58,8 @@ export function SearchFilters({
                             className={cn(
                                 'flex-1 rounded-sm py-2 text-xs font-bold transition-colors',
                                 activeGenderTab === tab
-                                    ? 'bg-[#100d67]/10 text-[#100d67]'
-                                    : 'text-slate-500 hover:text-[#100d67]'
+                                    ? 'bg-[#100d67]/10 text-[#100d67] dark:bg-slate-800 dark:text-slate-100'
+                                    : 'text-slate-500 hover:text-[#100d67] dark:text-slate-400 dark:hover:text-slate-100'
                             )}
                         >
                             {tab}

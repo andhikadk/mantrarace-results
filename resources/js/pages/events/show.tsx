@@ -157,7 +157,7 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
         <>
             <Head title={`${event.title} - Results`} />
 
-            <div className="min-h-screen bg-[#efefef] pb-12">
+            <div className="min-h-screen bg-[#efefef] dark:bg-slate-950 pb-12">
                 <EventHeader event={event} isLive={isLive} />
 
                 {elevationData.length > 0 && (
@@ -181,15 +181,15 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
 
                 <div className="mx-auto max-w-6xl px-4 py-4 relative">
                     {(isFiltering || isLoadingCategory) && (
-                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#efefef]/80">
-                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#efefef]/80 dark:bg-slate-950/80">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
                                 <Loader2 className="h-4 w-4 animate-spin" />
                                 Loading results...
                             </div>
                         </div>
                     )}
                     {paginatedLeaderboard.length === 0 ? (
-                        <div className="py-12 text-center text-slate-500">
+                        <div className="py-12 text-center text-slate-500 dark:text-slate-400">
                             No results found
                         </div>
                     ) : (

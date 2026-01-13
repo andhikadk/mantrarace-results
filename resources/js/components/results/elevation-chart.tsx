@@ -19,7 +19,14 @@ interface Props {
 }
 
 export function ElevationChart({ data, waypoints = [] }: Props) {
+    const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
     const { options, series } = useMemo(() => {
+        const accentColor = isDark ? '#60a5fa' : '#100d67';
+        const gridColor = isDark ? '#334155' : '#e2e8f0';
+        const labelColor = isDark ? '#cbd5e1' : '#94a3b8';
+        const waypointColor = isDark ? '#f87171' : '#f00102';
+
         // Format data as [x, y] pairs for numeric x-axis
         const chartData = data.map((p) => ({
             x: p.distance,
@@ -34,10 +41,10 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
         // Create xaxis annotations for waypoints (vertical lines)
         const xaxisAnnotations = waypoints.map((wp) => ({
             x: wp.distance,
-            borderColor: '#f00102',
+            borderColor: waypointColor,
             strokeDashArray: 0,
             label: {
-                borderColor: '#f00102',
+                borderColor: waypointColor,
                 borderWidth: 1,
                 borderRadius: 2,
                 text: wp.name,
@@ -46,7 +53,7 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
                 orientation: 'horizontal',
                 style: {
                     color: '#fff',
-                    background: '#f00102',
+                    background: waypointColor,
                     fontSize: '9px',
                     fontWeight: '600',
                     padding: {
@@ -69,7 +76,7 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
                 background: 'transparent',
                 fontFamily: 'inherit',
             },
-            colors: ['#100d67'],
+            colors: [accentColor],
             fill: {
                 type: 'gradient',
                 gradient: {
@@ -85,7 +92,7 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
             },
             dataLabels: { enabled: false },
             grid: {
-                borderColor: '#e2e8f0',
+                borderColor: gridColor,
                 strokeDashArray: 3,
                 xaxis: { lines: { show: false } },
                 yaxis: { lines: { show: true } },
@@ -100,7 +107,7 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
                 max: maxDistance,
                 labels: {
                     formatter: (val: number) => `${val.toFixed(0)} km`,
-                    style: { fontSize: '10px', colors: '#94a3b8' },
+                    style: { fontSize: '10px', colors: labelColor },
                     rotate: 0,
                 },
                 tickAmount: 6,
@@ -113,13 +120,13 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
                 max: Math.ceil(maxEle / 100) * 100,
                 labels: {
                     formatter: (val: number) => `${val}m`,
-                    style: { fontSize: '10px', colors: '#94a3b8' },
+                    style: { fontSize: '10px', colors: labelColor },
                 },
                 tickAmount: 4,
             },
             tooltip: {
                 enabled: true,
-                theme: 'light',
+                theme: isDark ? 'dark' : 'light',
                 x: {
                     formatter: (val: number) => `${val.toFixed(1)} km`,
                 },
@@ -132,14 +139,14 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
             options: chartOptions,
             series: [{ name: 'Elevation', data: chartData }],
         };
-    }, [data, waypoints]);
+    }, [data, waypoints, isDark]);
 
     if (data.length === 0) {
         return null;
     }
 
     return (
-        <div className="bg-white border-b border-slate-200">
+        <div className="bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
             <div className="mx-auto max-w-6xl px-4 py-3">
                 <div className="h-[200px] md:h-[240px]">
                     <Chart
