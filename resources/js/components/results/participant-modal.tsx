@@ -35,7 +35,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
         <>
             {/* Summary Modal */}
             <Dialog open={open && !showFullscreen} onOpenChange={(o) => !o && onClose()}>
-                <DialogContent className="w-[calc(100%-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-lg p-0 gap-0 dark:bg-slate-950 dark:border-slate-800">
+                <DialogContent className="w-[calc(100%-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-lg p-0 gap-0 dark:bg-slate-950 dark:border-slate-800 [&>button]:hidden">
                     {/* Header Section */}
                     <DialogHeader className="p-5 pb-4 border-b border-slate-200 dark:border-slate-800">
                         <div className="flex items-start justify-between gap-3">
