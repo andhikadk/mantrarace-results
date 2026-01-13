@@ -29,13 +29,19 @@ class CertificateService
         // Get field configuration or use default
         $fieldsConfig = $certificate->fields_config ?? $this->getDefaultConfig();
 
-        // Create PDF with FPDI
-        $pdf = new Fpdi();
-        $pdf->AddPage();
+        // Create PDF with FPDI using Points as unit matches React-PDF output
+        $pdf = new Fpdi('L', 'pt');
+        // Disable auto page break to prevent unwanted breaks
+        $pdf->SetAutoPageBreak(false);
         
         // Import template
         $pdf->setSourceFile($templatePath);
         $templateId = $pdf->importPage(1);
+        $size = $pdf->getTemplateSize($templateId);
+        
+        // Add page with same size/orientation as template
+        $orientation = $size['width'] > $size['height'] ? 'L' : 'P';
+        $pdf->AddPage($orientation, [$size['width'], $size['height']]);
         $pdf->useTemplate($templateId);
 
         // Render each field
@@ -127,7 +133,7 @@ class CertificateService
 
         return match ($type) {
             'participant_name' => $participant['name'] ?? null,
-            'overall_rank' => isset($participant['rank']) ? (string) $participant['rank'] : null,
+            'overall_rank' => isset($participant['overallRank']) ? (string) $participant['overallRank'] : (isset($participant['rank']) ? (string) $participant['rank'] : null),
             'gender_rank' => isset($participant['genderRank']) ? (string) $participant['genderRank'] : null,
             'category_name' => $category->name,
             'finish_time' => $participant['finishTime'] ?? null,

@@ -20,7 +20,7 @@ class CertificateController extends Controller
     {
         // Check if certificate is enabled
         $certificate = $category->certificate;
-        if (!$certificate || !$certificate->enabled) {
+        if (! $certificate || ! $certificate->enabled) {
             abort(404, 'Certificate not available for this category');
         }
 
@@ -28,20 +28,20 @@ class CertificateController extends Controller
         $category->load('checkpoints');
         $participant = $this->raceResultService->getParticipant($category, $bib);
 
-        if (!$participant) {
+        if (! $participant) {
             abort(404, 'Participant not found');
         }
 
         // Generate PDF
         $pdfContent = $this->certificateService->generate($category, $participant->toArray());
 
-        if (!$pdfContent) {
+        if (! $pdfContent) {
             abort(500, 'Failed to generate certificate');
         }
 
         // Return PDF response
         $filename = "certificate_{$category->slug}_{$bib}.pdf";
-        
+
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', "inline; filename=\"{$filename}\"");
