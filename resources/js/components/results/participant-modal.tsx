@@ -5,7 +5,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { getDisplayStatus, getFlag, getStatusBadge } from '@/lib/participantUtils';
+import { getDisplayStatus, getFlagCode, getStatusBadge } from '@/lib/participantUtils';
 import { normalizeGender } from '@/lib/normalizeGender';
 import { ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { useState } from 'react';
@@ -28,6 +28,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
     const displayStatus = getDisplayStatus(participant.status, participant.finishTime);
     const statusBadge = getStatusBadge(displayStatus);
     const isFinished = displayStatus === 'FINISHED';
+    const flagCode = getFlagCode(participant.nation);
 
     return (
         <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -37,7 +38,15 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                     <div className="flex items-start gap-3">
                         {/* Flag */}
                         <span className="flex h-8 w-10 items-center justify-center overflow-hidden rounded-sm border border-slate-200 bg-slate-50 text-xl shrink-0">
-                            {getFlag(participant.nation)}
+                            {flagCode ? (
+                                <span
+                                    className={`fi fi-${flagCode} h-5 w-7`}
+                                    title={participant.nation}
+                                    aria-label={participant.nation}
+                                />
+                            ) : (
+                                <span className="text-[10px] text-slate-400">--</span>
+                            )}
                         </span>
 
                         <div className="flex-1 min-w-0">

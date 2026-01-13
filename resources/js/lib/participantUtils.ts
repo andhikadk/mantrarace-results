@@ -2,48 +2,66 @@
  * Shared utilities for participant display components
  */
 
-export const FLAG_MAP: Record<string, string> = {
-    'INA': '🇮🇩',
-    'IDN': '🇮🇩',
-    'ID': '🇮🇩',
-    'INDONESIA': '🇮🇩',
-    'SGP': '🇸🇬',
-    'SG': '🇸🇬',
-    'SINGAPORE': '🇸🇬',
-    'MYS': '🇲🇾',
-    'MY': '🇲🇾',
-    'MALAYSIA': '🇲🇾',
-    'JPN': '🇯🇵',
-    'JP': '🇯🇵',
-    'JAPAN': '🇯🇵',
-    'AUS': '🇦🇺',
-    'AU': '🇦🇺',
-    'AUSTRALIA': '🇦🇺',
-    'USA': '🇺🇸',
-    'US': '🇺🇸',
-    'GBR': '🇬🇧',
-    'UK': '🇬🇧',
-    'NLD': '🇳🇱',
-    'NL': '🇳🇱',
-    'FRA': '🇫🇷',
-    'FR': '🇫🇷',
-    'DEU': '🇩🇪',
-    'DE': '🇩🇪',
-    'CHN': '🇨🇳',
-    'CN': '🇨🇳',
-    'KOR': '🇰🇷',
-    'KR': '🇰🇷',
-    'THA': '🇹🇭',
-    'TH': '🇹🇭',
-    'PHL': '🇵🇭',
-    'PH': '🇵🇭',
-    'VNM': '🇻🇳',
-    'VN': '🇻🇳',
+const ALPHA3_TO_ALPHA2: Record<string, string> = {
+    INA: 'id',
+    IDN: 'id',
+    SGP: 'sg',
+    MYS: 'my',
+    JPN: 'jp',
+    AUS: 'au',
+    USA: 'us',
+    GBR: 'gb',
+    NLD: 'nl',
+    FRA: 'fr',
+    DEU: 'de',
+    CHN: 'cn',
+    KOR: 'kr',
+    THA: 'th',
+    PHL: 'ph',
+    VNM: 'vn',
 };
 
-export function getFlag(nation: string): string {
-    const key = nation?.toUpperCase()?.trim();
-    return FLAG_MAP[key] || '🏳️';
+const NAME_TO_ALPHA2: Record<string, string> = {
+    INDONESIA: 'id',
+    SINGAPORE: 'sg',
+    MALAYSIA: 'my',
+    JAPAN: 'jp',
+    AUSTRALIA: 'au',
+    'UNITED STATES': 'us',
+    'UNITED STATES OF AMERICA': 'us',
+    'UNITED KINGDOM': 'gb',
+    ENGLAND: 'gb',
+    NETHERLANDS: 'nl',
+    FRANCE: 'fr',
+    GERMANY: 'de',
+    CHINA: 'cn',
+    'SOUTH KOREA': 'kr',
+    KOREA: 'kr',
+    THAILAND: 'th',
+    PHILIPPINES: 'ph',
+    VIETNAM: 'vn',
+};
+
+export function getFlagCode(nation: string): string | null {
+    const raw = (nation ?? '').trim();
+    if (!raw) return null;
+
+    const upper = raw.toUpperCase();
+
+    if (upper.length === 2) {
+        if (upper === 'UK') return 'gb';
+        return upper.toLowerCase();
+    }
+
+    if (upper.length === 3 && ALPHA3_TO_ALPHA2[upper]) {
+        return ALPHA3_TO_ALPHA2[upper];
+    }
+
+    if (NAME_TO_ALPHA2[upper]) {
+        return NAME_TO_ALPHA2[upper];
+    }
+
+    return null;
 }
 
 export function getStatusBadge(status: string) {

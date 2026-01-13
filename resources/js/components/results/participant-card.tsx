@@ -1,4 +1,4 @@
-import { getDisplayStatus, getFlag, getStatusBadge } from '@/lib/participantUtils';
+import { getDisplayStatus, getFlagCode, getStatusBadge } from '@/lib/participantUtils';
 import { normalizeGender } from '@/lib/normalizeGender';
 
 export interface Participant {
@@ -40,6 +40,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export function ParticipantCard({ participant, onClick }: Props) {
     const displayStatus = getDisplayStatus(participant.status, participant.finishTime);
+    const flagCode = getFlagCode(participant.nation);
 
     return (
         <div className="w-full rounded-md border border-slate-200 bg-white shadow-none md:rounded-none md:border-x-0 md:border-t-0 md:px-4 hover:bg-[#efefef]">
@@ -52,7 +53,15 @@ export function ParticipantCard({ participant, onClick }: Props) {
                 <div className="md:hidden">
                     <div className="mb-4 flex items-center gap-3">
                         <span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-sm border border-slate-200 bg-slate-50 text-lg">
-                            {getFlag(participant.nation)}
+                            {flagCode ? (
+                                <span
+                                    className={`fi fi-${flagCode} h-4 w-6`}
+                                    title={participant.nation}
+                                    aria-label={participant.nation}
+                                />
+                            ) : (
+                                <span className="text-[10px] text-slate-400">--</span>
+                            )}
                         </span>
                         <div>
                             <div className="text-base font-bold uppercase tracking-tight text-slate-900">
@@ -116,7 +125,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
                     </div> */}
 
                     <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <div className="min-w-0 ">
+                        <div className="min-w-0 outline">
                             <div className="flex min-w-0 items-center gap-2">
                                 <span className="relative inline-flex min-w-[44px] items-center justify-center border border-[#100d67] bg-white px-2 py-0.5 font-mono text-xs font-extrabold text-[#100d67] shadow-[inset_0_0_0_1px_rgba(16,13,103,0.06)] ring-1 ring-slate-200">
                                     <span className="absolute left-1 top-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50" />
@@ -127,7 +136,14 @@ export function ParticipantCard({ participant, onClick }: Props) {
                                 </span>
                                 <div>
                                     <span className="truncate text-sm font-bold uppercase text-slate-900">
-                                        {participant.name} {getFlag(participant.nation)}
+                                        {participant.name}
+                                        {flagCode && (
+                                            <span
+                                                className={`fi fi-${flagCode} ml-1 h-3 w-4`}
+                                                title={participant.nation}
+                                                aria-label={participant.nation}
+                                            />
+                                        )}
                                     </span>
                                     {participant.club && (
                                         <div className="mt-0.5 truncate text-xs text-slate-500 pl-[52px]">

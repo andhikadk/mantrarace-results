@@ -5,6 +5,7 @@ namespace App\Services\Timing;
 use App\Contracts\TimingSystemInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\TransferStats;
 use Illuminate\Support\Facades\Log;
 
@@ -39,9 +40,35 @@ class RaceResultClient implements TimingSystemInterface
                 },
             ]);
 
+            $status = $response->getStatusCode();
             $contents = $response->getBody()->getContents();
 
+            if ($status >= 400) {
+                Log::warning('raceresult.http_error', [
+                    'endpoint' => $endpointUrl,
+                    'status' => $status,
+                    'retry_after' => $response->getHeaderLine('Retry-After') ?: null,
+                    'body_preview' => substr($contents, 0, 500),
+                ]);
+
+                return [];
+            }
+
             return json_decode($contents, true) ?? [];
+        } catch (RequestException $e) {
+            $response = $e->getResponse();
+            $status = $response?->getStatusCode();
+            $body = $response ? (string) $response->getBody() : '';
+
+            Log::error('raceresult.http_exception', [
+                'endpoint' => $endpointUrl,
+                'status' => $status,
+                'retry_after' => $response?->getHeaderLine('Retry-After') ?: null,
+                'error' => $e->getMessage(),
+                'body_preview' => $body ? substr($body, 0, 500) : null,
+            ]);
+
+            return [];
         } catch (GuzzleException $e) {
             Log::error('RaceResult API error', [
                 'endpoint' => $endpointUrl,

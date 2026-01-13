@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Category;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Mpdf\Mpdf;
@@ -66,7 +65,6 @@ class CertificateService
             mkdir($config['tempDir'], 0755, true);
         }
 
-        $start = microtime(true);
         $mpdf = new Mpdf($config);
 
         // Import PDF template as background
@@ -90,10 +88,6 @@ class CertificateService
 
         // Return PDF content
         $output = $mpdf->Output('', 'S');
-        Log::info('certificate.render', [
-            'category_id' => $category->id,
-            'ms' => (microtime(true) - $start) * 1000,
-        ]);
 
         return $output;
     }

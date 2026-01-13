@@ -7,7 +7,6 @@ use App\Models\Event;
 use App\Services\CertificateService;
 use App\Services\RaceResultService;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CertificateController extends Controller
@@ -43,11 +42,6 @@ class CertificateController extends Controller
         // Return PDF response
         $filename = "certificate_{$category->slug}_{$bib}.pdf";
         $bytes = strlen($pdfContent);
-        Log::info('certificate.response', [
-            'category_id' => $category->id,
-            'bib' => $bib,
-            'bytes' => $bytes,
-        ]);
 
         return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',
