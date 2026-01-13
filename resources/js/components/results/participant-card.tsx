@@ -1,3 +1,4 @@
+import { getDisplayStatus, getFlag, getStatusBadge } from '@/lib/participantUtils';
 import { normalizeGender } from '@/lib/normalizeGender';
 
 export interface Participant {
@@ -28,75 +29,17 @@ interface Props {
     onClick: () => void;
 }
 
-const FLAG_MAP: Record<string, string> = {
-    'INA': '🇮🇩',
-    'IDN': '🇮🇩',
-    'ID': '🇮🇩',
-    'INDONESIA': '🇮🇩',
-    'SGP': '🇸🇬',
-    'SG': '🇸🇬',
-    'SINGAPORE': '🇸🇬',
-    'MYS': '🇲🇾',
-    'MY': '🇲🇾',
-    'MALAYSIA': '🇲🇾',
-    'JPN': '🇯🇵',
-    'JP': '🇯🇵',
-    'JAPAN': '🇯🇵',
-    'AUS': '🇦🇺',
-    'AU': '🇦🇺',
-    'AUSTRALIA': '🇦🇺',
-    'USA': '🇺🇸',
-    'US': '🇺🇸',
-    'GBR': '🇬🇧',
-    'UK': '🇬🇧',
-    'NLD': '🇳🇱',
-    'NL': '🇳🇱',
-    'FRA': '🇫🇷',
-    'FR': '🇫🇷',
-    'DEU': '🇩🇪',
-    'DE': '🇩🇪',
-    'CHN': '🇨🇳',
-    'CN': '🇨🇳',
-    'KOR': '🇰🇷',
-    'KR': '🇰🇷',
-    'THA': '🇹🇭',
-    'TH': '🇹🇭',
-    'PHL': '🇵🇭',
-    'PH': '🇵🇭',
-    'VNM': '🇻🇳',
-    'VN': '🇻🇳',
-};
-
-function getFlag(nation: string): string {
-    const key = nation?.toUpperCase()?.trim();
-    return FLAG_MAP[key] || '🏳️';
-}
-
-function getStatusBadge(status: string) {
-    const s = status?.toUpperCase();
-    if (s === 'FINISHED') {
-        return <span className="inline-flex rounded-full bg-green-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700">FINISHED</span>;
-    }
-    if (s === 'DNF') {
-        return <span className="inline-flex rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">DNF</span>;
-    }
-    if (s === 'DNS') {
-        return <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-600">DNS</span>;
-    }
-    // Default / On Race
-    return <span className="inline-flex rounded-full bg-yellow-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-yellow-700">ON RACE</span>;
+function StatusBadge({ status }: { status: string }) {
+    const badge = getStatusBadge(status);
+    return (
+        <span className={`inline-flex rounded-full ${badge.bgClass} px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${badge.textClass}`}>
+            {badge.label}
+        </span>
+    );
 }
 
 export function ParticipantCard({ participant, onClick }: Props) {
-    // Determine explicit status for badge logic
-    const status = participant.status?.toUpperCase() || '';
-    let displayStatus = status;
-    if (!displayStatus) {
-        displayStatus = participant.finishTime ? 'FINISHED' : 'ON RACE';
-    }
-
-    if (status === 'DNF') displayStatus = 'DNF';
-    if (status === 'DNS') displayStatus = 'DNS';
+    const displayStatus = getDisplayStatus(participant.status, participant.finishTime);
 
     return (
         <div className="w-full rounded-md border border-slate-200 bg-white shadow-none md:rounded-none md:border-x-0 md:border-t-0 md:px-4 hover:bg-[#efefef]">
@@ -145,7 +88,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
                         <div className="flex flex-col items-end justify-between">
                             <div>
                                 <div className="mb-1 text-right text-[10px] font-bold uppercase text-slate-400">STATUS</div>
-                                {getStatusBadge(displayStatus)}
+                                <StatusBadge status={displayStatus} />
                             </div>
                             <div className="text-right">
                                 <div className="text-[10px] font-bold uppercase text-slate-400 mb-0.5">TIME</div>
@@ -158,13 +101,19 @@ export function ParticipantCard({ participant, onClick }: Props) {
                 </div>
 
                 {/* Desktop Row */}
-                <div className="hidden md:flex md:items-center md:gap-6">
+                <div className="hidden md:flex md:items-center md:gap-4">
                     <div className="w-14 text-center">
                         <div className="font-mono text-xl font-bold italic text-[#f00102]">
                             {participant.overallRank > 0 ? participant.overallRank.toString().padStart(2, '0') : '-'}
                         </div>
                         <div className="text-[10px] font-bold uppercase text-slate-400">RANK</div>
                     </div>
+                    {/* <div className="w-14 text-center">
+                        <div className="font-mono text-xl font-bold italic text-[#100d67]">
+                            {participant.genderRank > 0 ? participant.genderRank.toString().padStart(2, '0') : '-'}
+                        </div>
+                        <div className="text-[10px] font-bold uppercase text-slate-400">GENDER RANK</div>
+                    </div> */}
 
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                         <div className="min-w-0">
@@ -183,6 +132,11 @@ export function ParticipantCard({ participant, onClick }: Props) {
                                     {getFlag(participant.nation)}
                                 </span>
                             </div>
+                            {participant.club && (
+                                <div className="mt-0.5 truncate text-xs text-slate-500 pl-[52px]">
+                                    {participant.club}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -209,7 +163,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
 
                     <div className="w-24 text-right">
                         <div className="text-[10px] font-bold uppercase text-slate-400">STATUS</div>
-                        {getStatusBadge(displayStatus)}
+                        <StatusBadge status={displayStatus} />
                     </div>
                 </div>
             </button>
