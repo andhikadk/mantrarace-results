@@ -90,17 +90,55 @@ class RaceResultService
     }
 
     /**
-     * Normalize gender value (handle corrupted data like "F_ma_e")
+     * Normalize gender value with exact matching and fallback logic
+     * Priority:
+     * 1. Exact match "Male" / "Female" (case insensitive)
+     * 2. Common variations (F, P, W, Wanita, Perempuan, M, L, Pria, Laki-laki)
+     * 3. Handle corrupted data (f_ma_e, etc.)
+     * 4. Fallback by character count: 4 chars = Male, 6 chars = Female
      */
     private function normalizeGender(string $gender): string
     {
-        $gender = strtolower(trim($gender));
+        $original = trim($gender);
+        $lower = strtolower($original);
 
-        if (str_contains($gender, 'female') || str_contains($gender, 'f_ma')) {
+        // Exact matching (case insensitive)
+        if ($lower === 'male' || $lower === 'm') {
+            return 'Male';
+        }
+        if ($lower === 'female' || $lower === 'f') {
             return 'Female';
         }
 
-        return 'Male';
+        // Indonesian variations
+        if (in_array($lower, ['pria', 'laki-laki', 'laki', 'l', 'cowok', 'cwo'])) {
+            return 'Male';
+        }
+        if (in_array($lower, ['wanita', 'perempuan', 'p', 'w', 'cewek', 'cwe'])) {
+            return 'Female';
+        }
+
+        // Handle corrupted data with underscores (like "F_ma_e" or "Ma_e")
+        if (str_contains($lower, 'female') || str_contains($lower, 'f_ma')) {
+            return 'Female';
+        }
+        if (str_contains($lower, 'male') || str_contains($lower, 'ma_e')) {
+            return 'Male';
+        }
+
+        // Fallback by character count (after removing non-alpha chars)
+        $alphaOnly = preg_replace('/[^a-zA-Z]/', '', $original);
+        $length = strlen($alphaOnly);
+
+        if ($length === 4) {
+            return 'Male';
+        }
+        if ($length === 6) {
+            return 'Female';
+        }
+
+        // If cannot determine, return original value (will be filtered out by both Male and Female filters)
+        return $original ?: 'Unknown';
     }
 
     /**

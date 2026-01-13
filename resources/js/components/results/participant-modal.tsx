@@ -5,9 +5,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Download } from 'lucide-react';
+import { ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { type Participant } from './participant-card';
 import { RankBadge } from './rank-badge';
+import { useState } from 'react';
 
 interface Props {
     participant: Participant | null;
@@ -20,6 +21,8 @@ interface Props {
 
 export function ParticipantModal({ participant, open, onClose, eventSlug, categorySlug, certificateEnabled }: Props) {
     if (!participant) return null;
+
+    const [splitsOpen, setSplitsOpen] = useState(false);
 
     const status = participant.status?.toUpperCase() || '';
     const isFinished = status === 'FINISHED'
@@ -75,33 +78,43 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
 
                     {participant.checkpoints.length > 0 && (
                         <div>
-                            <h4 className="mb-3 font-semibold text-slate-900">Checkpoint Splits</h4>
-                            <div className="space-y-2">
-                                {participant.checkpoints.map((cp, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center justify-between rounded-md border border-slate-200 p-3"
-                                    >
-                                        <div>
-                                            <div className="font-medium">{cp.name}</div>
-                                            {cp.segment && (
-                                                <div className="text-xs text-slate-500">
-                                                    Segment: {cp.segment}
+                            <button
+                                type="button"
+                                onClick={() => setSplitsOpen((prev) => !prev)}
+                                className="flex w-full items-center justify-between rounded-sm border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900"
+                                aria-expanded={splitsOpen}
+                            >
+                                <span>Checkpoint Splits</span>
+                                {splitsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </button>
+                            {splitsOpen && (
+                                <div className="mt-3 space-y-2">
+                                    {participant.checkpoints.map((cp, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex items-center justify-between rounded-md border border-slate-200 p-3"
+                                        >
+                                            <div>
+                                                <div className="font-medium">{cp.name}</div>
+                                                {cp.segment && (
+                                                    <div className="text-xs text-slate-500">
+                                                        Segment: {cp.segment}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="font-mono font-semibold">
+                                                    {cp.time || '-'}
                                                 </div>
-                                            )}
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="font-mono font-semibold">
-                                                {cp.time || '-'}
-                                            </div>
-                                            <div className="flex gap-2 text-xs text-slate-500">
-                                                {cp.overallRank && <span>#{cp.overallRank}</span>}
-                                                {cp.genderRank && <span>GR #{cp.genderRank}</span>}
+                                                <div className="flex gap-2 text-xs text-slate-500">
+                                                    {cp.overallRank && <span>#{cp.overallRank}</span>}
+                                                    {cp.genderRank && <span>GR #{cp.genderRank}</span>}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
 

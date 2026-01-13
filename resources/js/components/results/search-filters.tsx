@@ -22,20 +22,20 @@ export function SearchFilters({
         if (tab === 'OVERALL') {
             onGenderFilter('all');
         } else if (tab === 'MALE') {
-            onGenderFilter('M');
+            onGenderFilter('Male');
         } else if (tab === 'FEMALE') {
-            onGenderFilter('F');
+            onGenderFilter('Female');
         }
     }, [onGenderFilter]);
 
-    const activeGenderTab: GenderTab = genderFilter === 'M'
+    const activeGenderTab: GenderTab = genderFilter === 'Male'
         ? 'MALE'
-        : genderFilter === 'F'
+        : genderFilter === 'Female'
             ? 'FEMALE'
             : 'OVERALL';
 
     return (
-        <div className="bg-slate-50 sticky top-[53px] z-10">
+        <div className="bg-[#efefef] sticky top-[53px] z-10">
             <div className="mx-auto max-w-6xl px-4 py-4 space-y-4 md:space-y-0 md:flex md:items-center md:gap-4">
                 {/* Search Bar */}
                 <div className="relative md:flex-1">
@@ -45,7 +45,7 @@ export function SearchFilters({
                         placeholder="Search athlete or bib..."
                         value={query}
                         onChange={(e) => onSearch(e.target.value)}
-                        className="h-12 w-full rounded-md border border-slate-200 bg-white pl-11 shadow-none placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-slate-300"
+                        className="h-12 w-full rounded-md border border-slate-200 bg-white pl-11 shadow-none placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-[#100d67]/30"
                     />
                 </div>
 
@@ -58,8 +58,8 @@ export function SearchFilters({
                             className={cn(
                                 'flex-1 rounded-sm py-2 text-xs font-bold transition-colors',
                                 activeGenderTab === tab
-                                    ? 'bg-[#1a2744] text-white'
-                                    : 'text-slate-500 hover:bg-slate-100'
+                                    ? 'bg-[#100d67]/10 text-[#100d67]'
+                                    : 'text-slate-500 hover:text-[#100d67]'
                             )}
                         >
                             {tab}

@@ -4,6 +4,7 @@ import { EventHeader } from '@/components/results/event-header';
 import { ParticipantCard, type Participant } from '@/components/results/participant-card';
 import { ParticipantModal } from '@/components/results/participant-modal';
 import { SearchFilters } from '@/components/results/search-filters';
+import { normalizeGender } from '@/lib/normalizeGender';
 import { type Event } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
@@ -48,12 +49,8 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
             }
 
             if (genderFilter !== 'all') {
-                const gender = (p.gender ?? '').toString().trim().toUpperCase();
-                if (genderFilter === 'M') {
-                    if (gender !== 'MALE') return false;
-                } else if (genderFilter === 'F') {
-                    if (gender !== 'FEMALE') return false;
-                }
+                const normalizedGender = normalizeGender(p.gender);
+                if (normalizedGender !== genderFilter) return false;
             }
 
             return true;
@@ -137,7 +134,7 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
         <>
             <Head title={`${event.title} - Results`} />
 
-            <div className="min-h-screen bg-slate-50 pb-12">
+            <div className="min-h-screen bg-[#efefef] pb-12">
                 <EventHeader event={event} isLive={isLive} />
 
                 {categories.length > 1 && (
@@ -157,7 +154,7 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
 
                 <div className="mx-auto max-w-6xl px-4 py-4 relative">
                     {(isFiltering || isLoadingCategory) && (
-                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-50/80">
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#efefef]/80">
                             <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                                 <Loader2 className="h-4 w-4 animate-spin" />
                                 Loading results...
@@ -171,9 +168,9 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                     ) : (
                         <>
                             <div className="space-y-3">
-                                {paginatedLeaderboard.map((participant) => (
+                                {paginatedLeaderboard.map((participant, index) => (
                                     <ParticipantCard
-                                        key={participant.bib}
+                                        key={`${participant.bib}-${index}`}
                                         participant={participant}
                                         onClick={() => setSelectedParticipant(participant)}
                                     />
