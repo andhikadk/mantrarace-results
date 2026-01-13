@@ -83,11 +83,7 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
         return filteredLeaderboard.slice(start, start + ITEMS_PER_PAGE);
     }, [filteredLeaderboard, currentPage]);
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery, genderFilter]);
-
-    useEffect(() => {
+    const resetFilters = useCallback(() => {
         setSearchQuery('');
         setGenderFilter(DEFAULT_GENDER_FILTER);
         setCurrentPage(1);
@@ -98,12 +94,13 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
             window.clearTimeout(filterTimeoutRef.current);
             filterTimeoutRef.current = null;
         }
-    }, [activeCategory?.slug]);
+    }, []);
 
     // Derived stats removed as StatsBar is removed
 
     const handleCategorySelect = useCallback((slug: string) => {
         if (slug === activeCategory?.slug) return;
+        resetFilters();
         router.visit(`/${event.slug}`, {
             preserveScroll: true,
             preserveState: true,
@@ -112,7 +109,7 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
             onStart: () => setIsLoadingCategory(true),
             onFinish: () => setIsLoadingCategory(false),
         });
-    }, [event.slug, activeCategory?.slug]);
+    }, [event.slug, activeCategory?.slug, resetFilters]);
 
     const triggerFilterLoading = useCallback(() => {
         setIsFiltering(true);
@@ -127,13 +124,24 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
 
     const handleSearch = useCallback((value: string) => {
         triggerFilterLoading();
+        setCurrentPage(1);
         setSearchQuery(value);
     }, [triggerFilterLoading]);
 
     const handleGenderFilter = useCallback((value: string) => {
         triggerFilterLoading();
+        setCurrentPage(1);
         setGenderFilter(value);
     }, [triggerFilterLoading]);
+
+    useEffect(() => {
+        return () => {
+            if (filterTimeoutRef.current) {
+                window.clearTimeout(filterTimeoutRef.current);
+                filterTimeoutRef.current = null;
+            }
+        };
+    }, []);
 
     useEffect(() => {
         if (!isLive) return;
@@ -237,4 +245,3 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
         </>
     );
 }
-
