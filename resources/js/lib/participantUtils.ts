@@ -65,7 +65,17 @@ export function getFlagCode(nation: string): string | null {
 }
 
 export function getStatusBadge(status: string) {
-    const s = status?.toUpperCase();
+    const raw = (status || '').toUpperCase();
+
+    // Normalize Corrupted Strings
+    let s = raw;
+    if (raw.includes('_')) {
+        if (raw.startsWith('FIN')) s = 'FINISHED';
+        else if (raw.startsWith('YET')) s = 'YET TO START';
+        else if (raw.startsWith('DNF')) s = 'DNF';
+        else if (raw.startsWith('DNS')) s = 'DNS';
+    }
+
     if (s === 'FINISHED') {
         return {
             label: 'FINISHED',
@@ -87,19 +97,44 @@ export function getStatusBadge(status: string) {
             textClass: 'text-slate-600 dark:text-slate-300',
         };
     }
-    // Default / On Race
+    if (s === 'YET TO START') {
+        return {
+            label: 'YET TO START',
+            bgClass: 'bg-slate-100 dark:bg-slate-800',
+            textClass: 'text-slate-500 dark:text-slate-400',
+        };
+    }
+
+    // Default / On Race (Started, CP Names, etc)
+    // If status is present, show it (e.g., "POS 1", "STARTED"). If empty, fallback to "ON RACE"
+    const label = status ? status.toUpperCase() : 'ON RACE';
+
     return {
-        label: 'ON RACE',
+        label: label,
         bgClass: 'bg-yellow-100 dark:bg-yellow-900/30',
         textClass: 'text-yellow-700 dark:text-yellow-300',
     };
 }
 
 export function getDisplayStatus(status: string, finishTime: string | null): string {
-    const s = status?.toUpperCase() || '';
+    const raw = (status || '').toUpperCase();
+
+    // Normalize Corrupted Strings
+    let s = raw;
+    if (raw.includes('_')) {
+        if (raw.startsWith('FIN')) s = 'FINISHED';
+        else if (raw.startsWith('YET')) s = 'YET TO START';
+        else if (raw.startsWith('DNF')) s = 'DNF';
+        else if (raw.startsWith('DNS')) s = 'DNS';
+    }
+
     if (s === 'DNF') return 'DNF';
     if (s === 'DNS') return 'DNS';
     if (s === 'FINISHED') return 'FINISHED';
-    if (s) return s;
+    if (s === 'YET TO START') return 'YET TO START';
+
+    // If we have a status string (e.g. "CP1", "Started"), allow it through for display
+    if (status) return status;
+
     return finishTime ? 'FINISHED' : 'ON RACE';
 }

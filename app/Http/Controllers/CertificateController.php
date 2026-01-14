@@ -32,6 +32,15 @@ class CertificateController extends Controller
             abort(404, 'Participant not found');
         }
 
+        // Check if participant has finished
+        // Strict check: Status must be "FINISHED" OR finishTime must be present
+        $status = strtoupper($participant->status ?? '');
+        $hasFinishTime = ! empty($participant->finishTime);
+
+        if ($status !== 'FINISHED' && ! $hasFinishTime) {
+            abort(404, 'Certificate only available for finishers');
+        }
+
         // Generate PDF
         $pdfContent = $this->certificateService->generate($category, $participant->toArray());
 
