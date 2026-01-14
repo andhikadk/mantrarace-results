@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Contracts\TimingSystemInterface;
 use App\Data\CheckpointData;
 use App\Data\ParticipantData;
+use App\Jobs\RefreshRaceResultCache;
 use App\Models\Category;
 use App\Models\Checkpoint;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -18,51 +20,21 @@ class RaceResultService
     ) {}
 
     /**
-     * Get leaderboard for a category
+     * Get leaderboard payload for a category.
      *
-     * @return Collection<int, ParticipantData>
+     * @return array<int, array<string, mixed>>
      */
-    public function getLeaderboard(Category $category): Collection
+    public function getLeaderboardPayload(Category $category): array
     {
-        $cacheKey = "raceresult:{$category->id}";
-        $ttl = 5;
+        $payload = $this->getCachedPayload($category);
 
-        $start = microtime(true);
-        $cacheHit = Cache::has($cacheKey);
+        if ($payload !== null) {
+            return $payload['items'];
+        }
 
-        $rawData = Cache::remember($cacheKey, $ttl, function () use ($category) {
-            return $this->client->fetchResults($category->endpoint_url);
-        });
+        $payload = $this->refreshLeaderboardCache($category);
 
-        Log::info('raceresult.fetch', [
-            'category_id' => $category->id,
-            'cache_hit' => $cacheHit,
-            'count' => count($rawData),
-            'ms' => (microtime(true) - $start) * 1000,
-        ]);
-
-        $checkpoints = $category->checkpoints;
-
-        $mapStart = microtime(true);
-        $mapped = collect($rawData)
-            ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints))
-            ->sort(function (ParticipantData $a, ParticipantData $b) {
-                $rankA = $a->overallRank > 0 ? $a->overallRank : PHP_INT_MAX;
-                $rankB = $b->overallRank > 0 ? $b->overallRank : PHP_INT_MAX;
-
-                if ($rankA === $rankB) {
-                    return strnatcmp($a->bib, $b->bib);
-                }
-
-                return $rankA <=> $rankB;
-            })
-            ->values();
-        Log::info('raceresult.map', [
-            'category_id' => $category->id,
-            'ms' => (microtime(true) - $mapStart) * 1000,
-        ]);
-
-        return $mapped;
+        return $payload['items'];
     }
 
     /**
@@ -70,8 +42,54 @@ class RaceResultService
      */
     public function getParticipant(Category $category, string $bib): ?ParticipantData
     {
-        return $this->getLeaderboard($category)
-            ->first(fn (ParticipantData $p) => $p->bib === $bib);
+        foreach ($this->getLeaderboardPayload($category) as $participant) {
+            if (($participant['bib'] ?? '') === $bib) {
+                return $this->participantFromArray($participant);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Force refresh leaderboard cache (sync).
+     *
+     * @return array{fetched_at:int,items:array<int,array<string,mixed>>}
+     */
+    public function refreshLeaderboardCache(Category $category): array
+    {
+        $cacheKey = $this->payloadCacheKey($category);
+        $lockKey = $this->payloadLockKey($category);
+        $lockSeconds = $this->getConfigInt('services.raceresult.refresh_lock_seconds', 20);
+        $lockWaitSeconds = $this->getConfigInt('services.raceresult.refresh_lock_wait', 5);
+        $staleTtl = $this->getStaleTtl();
+
+        $lock = Cache::lock($lockKey, $lockSeconds);
+
+        try {
+            return $lock->block($lockWaitSeconds, function () use ($cacheKey, $category, $staleTtl) {
+                $payload = Cache::get($cacheKey);
+                if ($this->isValidPayload($payload)) {
+                    return $payload;
+                }
+
+                $payload = $this->buildPayload($category);
+                Cache::put($cacheKey, $payload, $staleTtl);
+
+                return $payload;
+            });
+        } catch (LockTimeoutException) {
+            $payload = Cache::get($cacheKey);
+
+            if ($this->isValidPayload($payload)) {
+                return $payload;
+            }
+
+            return [
+                'fetched_at' => time(),
+                'items' => [],
+            ];
+        }
     }
 
     /**
@@ -204,5 +222,203 @@ class RaceResultService
         }
 
         return (int) $value;
+    }
+
+    /**
+     * @return array{fetched_at:int,items:array<int,array<string,mixed>>}|null
+     */
+    private function getCachedPayload(Category $category): ?array
+    {
+        $cacheKey = $this->payloadCacheKey($category);
+        $payload = Cache::get($cacheKey);
+
+        if (! $this->isValidPayload($payload)) {
+            if ($this->shouldLogMetrics()) {
+                Log::info('raceresult.cache', [
+                    'category_id' => $category->id,
+                    'status' => 'miss',
+                ]);
+            }
+
+            return null;
+        }
+
+        $age = time() - (int) $payload['fetched_at'];
+        $cacheTtl = $this->getCacheTtl();
+        $staleTtl = $this->getStaleTtl();
+
+        if ($age <= $cacheTtl) {
+            if ($this->shouldLogMetrics()) {
+                Log::info('raceresult.cache', [
+                    'category_id' => $category->id,
+                    'status' => 'hit',
+                    'age' => $age,
+                    'cache_ttl' => $cacheTtl,
+                ]);
+            }
+
+            return $payload;
+        }
+
+        if ($age <= $staleTtl) {
+            if ($this->shouldLogMetrics()) {
+                Log::info('raceresult.cache', [
+                    'category_id' => $category->id,
+                    'status' => 'stale',
+                    'age' => $age,
+                    'cache_ttl' => $cacheTtl,
+                    'stale_ttl' => $staleTtl,
+                ]);
+            }
+
+            $this->dispatchRefreshIfNeeded($category);
+
+            return $payload;
+        }
+
+        if ($this->shouldLogMetrics()) {
+            Log::info('raceresult.cache', [
+                'category_id' => $category->id,
+                'status' => 'expired',
+                'age' => $age,
+                'stale_ttl' => $staleTtl,
+            ]);
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{fetched_at:int,items:array<int,array<string,mixed>>}
+     */
+    private function buildPayload(Category $category): array
+    {
+        $start = microtime(true);
+        $rawData = $this->client->fetchResults($category->endpoint_url);
+
+        if ($this->shouldLogMetrics()) {
+            Log::info('raceresult.fetch', [
+                'category_id' => $category->id,
+                'count' => count($rawData),
+                'ms' => (microtime(true) - $start) * 1000,
+            ]);
+        }
+
+        $checkpoints = $category->checkpoints;
+        $mapStart = microtime(true);
+        $mapped = collect($rawData)
+            ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints))
+            ->sort(function (ParticipantData $a, ParticipantData $b) {
+                $rankA = $a->overallRank > 0 ? $a->overallRank : PHP_INT_MAX;
+                $rankB = $b->overallRank > 0 ? $b->overallRank : PHP_INT_MAX;
+
+                if ($rankA === $rankB) {
+                    return strnatcmp($a->bib, $b->bib);
+                }
+
+                return $rankA <=> $rankB;
+            })
+            ->values();
+
+        if ($this->shouldLogMetrics()) {
+            Log::info('raceresult.map', [
+                'category_id' => $category->id,
+                'ms' => (microtime(true) - $mapStart) * 1000,
+            ]);
+        }
+
+        return [
+            'fetched_at' => time(),
+            'items' => $mapped->map->toArray()->all(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function participantFromArray(array $payload): ParticipantData
+    {
+        return new ParticipantData(
+            overallRank: (int) ($payload['overallRank'] ?? 0),
+            genderRank: (int) ($payload['genderRank'] ?? 0),
+            bib: (string) ($payload['bib'] ?? ''),
+            name: (string) ($payload['name'] ?? ''),
+            gender: (string) ($payload['gender'] ?? ''),
+            nation: (string) ($payload['nation'] ?? ''),
+            club: (string) ($payload['club'] ?? ''),
+            finishTime: $payload['finishTime'] ?? null,
+            netTime: $payload['netTime'] ?? null,
+            gap: $payload['gap'] ?? null,
+            status: (string) ($payload['status'] ?? ''),
+            checkpoints: array_map(
+                fn (array $cp) => new CheckpointData(
+                    name: (string) ($cp['name'] ?? ''),
+                    time: $cp['time'] ?? null,
+                    segment: $cp['segment'] ?? null,
+                    overallRank: $this->toNullableInt($cp['overallRank'] ?? null),
+                    genderRank: $this->toNullableInt($cp['genderRank'] ?? null),
+                ),
+                $payload['checkpoints'] ?? []
+            ),
+        );
+    }
+
+    private function payloadCacheKey(Category $category): string
+    {
+        return "raceresult:{$category->id}:payload";
+    }
+
+    private function payloadLockKey(Category $category): string
+    {
+        return "raceresult:{$category->id}:lock";
+    }
+
+    private function refreshThrottleKey(Category $category): string
+    {
+        return "raceresult:{$category->id}:refreshing";
+    }
+
+    private function dispatchRefreshIfNeeded(Category $category): void
+    {
+        if (! config('services.raceresult.refresh_async', true)) {
+            return;
+        }
+
+        $cooldown = $this->getConfigInt('services.raceresult.refresh_cooldown', 15);
+        if (! Cache::add($this->refreshThrottleKey($category), true, $cooldown)) {
+            return;
+        }
+
+        RefreshRaceResultCache::dispatch($category->id);
+    }
+
+    private function isValidPayload(mixed $payload): bool
+    {
+        return is_array($payload)
+            && isset($payload['fetched_at'], $payload['items'])
+            && is_array($payload['items']);
+    }
+
+    private function getCacheTtl(): int
+    {
+        return max(1, $this->getConfigInt('services.raceresult.cache_ttl', 30));
+    }
+
+    private function getStaleTtl(): int
+    {
+        $cacheTtl = $this->getCacheTtl();
+        $staleTtl = $this->getConfigInt('services.raceresult.stale_ttl', 300);
+
+        return max($cacheTtl, $staleTtl);
+    }
+
+    private function shouldLogMetrics(): bool
+    {
+        return (bool) config('services.raceresult.log_metrics', false);
+    }
+
+    private function getConfigInt(string $key, int $default): int
+    {
+        return (int) config($key, $default);
     }
 }

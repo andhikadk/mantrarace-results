@@ -23,12 +23,15 @@ class RaceResultClient implements TimingSystemInterface
     public function fetchResults(string $endpointUrl): array
     {
         try {
-            $response = $this->http->get($endpointUrl, [
+            $options = [
                 'timeout' => config('services.raceresult.timeout', 30),
                 'headers' => [
                     'Accept' => 'application/json',
                 ],
-                'on_stats' => function (TransferStats $stats) use ($endpointUrl) {
+            ];
+
+            if ($this->shouldLogMetrics()) {
+                $options['on_stats'] = function (TransferStats $stats) use ($endpointUrl) {
                     $handler = $stats->getHandlerStats();
                     Log::info('raceresult.http', [
                         'endpoint' => $endpointUrl,
@@ -37,8 +40,10 @@ class RaceResultClient implements TimingSystemInterface
                         'connect_ms' => ($handler['connect_time'] ?? 0) * 1000,
                         'starttransfer_ms' => ($handler['starttransfer_time'] ?? 0) * 1000,
                     ]);
-                },
-            ]);
+                };
+            }
+
+            $response = $this->http->get($endpointUrl, $options);
 
             $status = $response->getStatusCode();
             $contents = $response->getBody()->getContents();
@@ -77,5 +82,10 @@ class RaceResultClient implements TimingSystemInterface
 
             return [];
         }
+    }
+
+    private function shouldLogMetrics(): bool
+    {
+        return (bool) config('services.raceresult.log_metrics', false);
     }
 }

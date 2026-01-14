@@ -38,6 +38,12 @@ return [
     'raceresult' => [
         'timeout' => env('RACERESULT_TIMEOUT', 30),
         'cache_ttl' => env('RACERESULT_CACHE_TTL', 60),
+        'stale_ttl' => env('RACERESULT_STALE_TTL', 300),
+        'refresh_async' => env('RACERESULT_REFRESH_ASYNC', true),
+        'refresh_cooldown' => env('RACERESULT_REFRESH_COOLDOWN', 15),
+        'refresh_lock_seconds' => env('RACERESULT_REFRESH_LOCK_SECONDS', 20),
+        'refresh_lock_wait' => env('RACERESULT_REFRESH_LOCK_WAIT', 5),
+        'log_metrics' => env('RACERESULT_LOG_METRICS', false),
     ],
 
 ];

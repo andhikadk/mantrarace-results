@@ -31,7 +31,7 @@ class CategoryController extends Controller
                 'slug' => $category->slug,
                 'certificateEnabled' => $category->certificate?->enabled ?? false,
             ],
-            'leaderboard' => $service->getLeaderboard($category)->map->toArray(),
+            'leaderboard' => $service->getLeaderboardPayload($category),
             'isLive' => $isLive,
         ]);
     }

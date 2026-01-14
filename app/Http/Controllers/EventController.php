@@ -23,8 +23,8 @@ class EventController extends Controller
             : $categories->first();
 
         $leaderboard = $defaultCategory
-            ? $raceService->getLeaderboard($defaultCategory)
-            : collect();
+            ? $raceService->getLeaderboardPayload($defaultCategory)
+            : [];
 
         $gpxData = ['elevation' => [], 'waypoints' => []];
         if ($defaultCategory && $defaultCategory->gpx_path) {
@@ -47,7 +47,7 @@ class EventController extends Controller
                 'slug' => $defaultCategory->slug,
                 'certificateEnabled' => $defaultCategory->certificate?->enabled ?? false,
             ] : null,
-            'leaderboard' => $leaderboard->map->toArray(),
+            'leaderboard' => $leaderboard,
             'elevationData' => $gpxData['elevation'],
             'elevationWaypoints' => $gpxData['waypoints'],
             'isLive' => $isLive,
