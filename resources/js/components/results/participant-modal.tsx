@@ -9,6 +9,7 @@ import { getDisplayStatus, getFlagCode, getStatusBadge } from '@/lib/participant
 import { normalizeGender } from '@/lib/normalizeGender';
 import { ChevronLeft, Download, Maximize2 } from 'lucide-react';
 import { useState } from 'react';
+import { SegmentPaceChart } from './segment-pace-chart';
 import { ElevationChart } from './elevation-chart';
 import { type Participant } from './participant-card';
 
@@ -252,17 +253,27 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
 
                         <div className="flex-1 p-4 lg:p-6 lg:grid lg:grid-cols-12 lg:gap-8 max-w-7xl mx-auto w-full">
                             {/* Left Panel: Profile & Live Stats (4 Columns on Desktop) */}
-                            <div className="lg:col-span-4 space-y-6">
+                            <div className="lg:col-span-4 space-y-6 flex flex-col">
 
                                 {/* Identity Card */}
-                                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <div className="text-2xl font-bold uppercase tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
+                                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm shrink-0">
+                                    <div className="flex items-start gap-4">
+                                        {/* BIB - Left Side (Consistent with ParticipantCard) */}
+                                        <div className="relative inline-flex h-14 w-16 items-center justify-center border border-[#100d67] dark:border-slate-600 bg-white dark:bg-slate-950 px-3 font-mono text-2xl font-extrabold text-[#100d67] dark:text-slate-100 shadow-[inset_0_0_0_1px_rgba(16,13,103,0.06)] ring-1 ring-slate-200 dark:ring-slate-700 shrink-0">
+                                            <span className="absolute left-1 top-1 h-1 w-1 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                            <span className="absolute right-1 top-1 h-1 w-1 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                            <span className="absolute left-1 bottom-1 h-1 w-1 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                            <span className="absolute right-1 bottom-1 h-1 w-1 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                            {participant.bib}
+                                        </div>
+
+                                        {/* Name & Club */}
+                                        <div className="min-w-0 flex-1 pt-0.5">
+                                            <div className="text-xl sm:text-2xl font-bold uppercase tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
                                                 {participant.name}
                                                 {flagCode && (
                                                     <span
-                                                        className={`fi fi-${flagCode} ml-2 align-middle text-xl`}
+                                                        className={`fi fi-${flagCode} ml-2 align-middle text-lg`}
                                                         title={participant.nation}
                                                         aria-label={participant.nation}
                                                     />
@@ -273,24 +284,18 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                                     {participant.club}
                                                 </div>
                                             )}
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-1">BIB</div>
-                                            <div className="font-mono text-xl font-extrabold text-[#100d67] dark:text-indigo-400">
-                                                {participant.bib}
+                                            <div className="mt-3 flex items-center gap-3">
+                                                <StatusBadge status={displayStatus} />
+                                                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">
+                                                    {normalizeGender(participant.gender)?.toUpperCase() || '-'}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="mt-4 flex items-center justify-between">
-                                        <div className="text-sm text-slate-500 dark:text-slate-400">
-                                            {normalizeGender(participant.gender)?.toUpperCase() || '-'}
-                                        </div>
-                                        <StatusBadge status={displayStatus} />
-                                    </div>
                                 </div>
 
-                                {/* LIVE STATS RECAP */}
-                                <div className="grid grid-cols-2 gap-3">
+                                {/* LIVE STATS RECAP (Grid) */}
+                                <div className="grid grid-cols-2 gap-3 shrink-0">
                                     {/* 1. Position / Last CP (Only show if NOT finished) */}
                                     {!isFinished && (
                                         <div className="col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-[#100d67] text-white p-5 shadow-sm relative overflow-hidden flex flex-col justify-center min-h-[100px]">
@@ -310,9 +315,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                             </div>
                                             {/* Decorative bg circle */}
                                             <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-                                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                                {/* Optional Icon */}
-                                            </div>
+                                            <div className="absolute top-0 right-0 p-4 opacity-10"></div>
                                         </div>
                                     )}
 
@@ -320,14 +323,12 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 relative overflow-hidden shadow-sm">
                                         <div className="relative z-10">
                                             <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-2">Distance</div>
-
                                             <div className="flex items-baseline gap-1">
                                                 <div className="font-mono text-3xl font-bold text-slate-900 dark:text-slate-100">
                                                     {currentDistance.toFixed(1)}
                                                 </div>
                                                 <span className="text-xs text-slate-500 font-bold">km</span>
                                             </div>
-
                                             {totalDistance > 0 && (
                                                 <div className="mt-3">
                                                     <div className="flex justify-between text-[10px] items-center mb-1.5 text-slate-500">
@@ -335,10 +336,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                                         <span className="font-mono">{totalDistance.toFixed(1)} km</span>
                                                     </div>
                                                     <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                                        <div
-                                                            className="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-out"
-                                                            style={{ width: `${Math.min(distanceProgress, 100)}%` }}
-                                                        ></div>
+                                                        <div className="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.min(distanceProgress, 100)}%` }}></div>
                                                     </div>
                                                 </div>
                                             )}
@@ -349,14 +347,12 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 relative overflow-hidden shadow-sm">
                                         <div className="relative z-10">
                                             <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-2">Elev. Gain</div>
-
                                             <div className="flex items-baseline gap-1">
                                                 <div className="font-mono text-3xl font-bold text-slate-900 dark:text-slate-100">
                                                     {Math.round(currentElevationGain)}
                                                 </div>
                                                 <span className="text-xs text-slate-500 font-bold">m</span>
                                             </div>
-
                                             {totalElevationGain > 0 && (
                                                 <div className="mt-3">
                                                     <div className="flex justify-between text-[10px] items-center mb-1.5 text-slate-500">
@@ -364,10 +360,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                                         <span className="font-mono">{Math.round(totalElevationGain)} m</span>
                                                     </div>
                                                     <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                                        <div
-                                                            className="h-full bg-red-500 rounded-full transition-all duration-1000 ease-out"
-                                                            style={{ width: `${Math.min(elevationProgress, 100)}%` }}
-                                                        ></div>
+                                                        <div className="h-full bg-red-500 rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.min(elevationProgress, 100)}%` }}></div>
                                                     </div>
                                                 </div>
                                             )}
@@ -380,9 +373,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                             <div className="font-mono text-3xl font-bold italic text-[#f00102] dark:text-red-400">
                                                 {participant.overallRank > 0 ? participant.overallRank.toString().padStart(2, '0') : '-'}
                                             </div>
-                                            <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                                                Overall Rank
-                                            </div>
+                                            <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">Overall Rank</div>
                                         </div>
                                         <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 p-4 text-center shadow-sm">
                                             <div className="font-mono text-3xl font-bold italic text-[#100d67] dark:text-indigo-400">
@@ -395,15 +386,15 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                     </div>
                                 </div>
 
-                                {/* Splits Timeline */}
-                                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col h-full bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
-                                    <div className="bg-slate-50/50 dark:bg-slate-800/30 px-5 py-4 border-b border-slate-200 dark:border-slate-800 backdrop-blur-sm">
+                                {/* Splits Timeline (Fills remaining height) */}
+                                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col flex-1 bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
+                                    <div className="bg-slate-50/50 dark:bg-slate-800/30 px-5 py-4 border-b border-slate-200 dark:border-slate-800 backdrop-blur-sm shrink-0">
                                         <h3 className="text-sm font-bold uppercase text-slate-900 dark:text-slate-100 tracking-wide flex items-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-[#f00102] dark:bg-red-500"></div>
                                             Race Timeline
                                         </h3>
                                     </div>
-                                    <div className="p-0 overflow-y-auto max-h-[350px] scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
+                                    <div className="p-0 overflow-y-auto min-h-[300px] scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
                                         {hasCheckpoints ? (
                                             <div className="relative pl-8 pr-5 py-6 space-y-0">
                                                 {/* Vertical Line */}
@@ -412,18 +403,16 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                                 {participant.checkpoints.map((cp, idx) => {
                                                     const isPassed = !!cp.time;
                                                     const isLastPassed = idx === lastReachedCheckpointIndex;
-
                                                     return (
                                                         <div key={idx} className={`relative pb-8 last:pb-0 ${!isPassed ? 'opacity-60 grayscale' : ''}`}>
                                                             {/* Dot Indicator */}
                                                             <div className={`absolute -left-[23px] top-1.5 w-3 h-3 rounded-full border-2 z-10 transition-all duration-300 ${isPassed
-                                                                    ? 'bg-[#100d67] border-[#100d67] dark:bg-indigo-500 dark:border-indigo-500'
-                                                                    : 'bg-slate-100 border-slate-300 dark:bg-slate-800 dark:border-slate-700'
+                                                                ? 'bg-[#100d67] border-[#100d67] dark:bg-indigo-500 dark:border-indigo-500'
+                                                                : 'bg-slate-100 border-slate-300 dark:bg-slate-800 dark:border-slate-700'
                                                                 } ${isLastPassed ? 'ring-4 ring-indigo-100 dark:ring-indigo-900/40 scale-110' : ''}`}></div>
 
                                                             {/* Content */}
                                                             <div className="flex flex-col gap-1">
-                                                                {/* Header: Name + Time */}
                                                                 <div className="flex justify-between items-start">
                                                                     <div>
                                                                         <div className={`text-sm font-bold ${isPassed ? 'text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-500'}`}>
@@ -442,13 +431,9 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                                                             </div>
                                                                         </div>
                                                                     ) : (
-                                                                        <div className="text-xs font-medium text-slate-400 italic">
-                                                                            --:--
-                                                                        </div>
+                                                                        <div className="text-xs font-medium text-slate-400 italic">--:--</div>
                                                                     )}
                                                                 </div>
-
-                                                                {/* Ranks Row */}
                                                                 {isPassed && (
                                                                     <div className="flex gap-2 mt-1.5">
                                                                         <div className="inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
@@ -478,18 +463,24 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                 </div>
                             </div>
 
-                            {/* Right Panel: Elevation Chart (8 Columns on Desktop) */}
+                            {/* Right Panel: Charts (8 Columns on Desktop) */}
                             <div className="lg:col-span-8 mt-6 lg:mt-0 space-y-6">
                                 <div className="sticky top-20 space-y-6">
+
+                                    {/* Segment Pace Chart */}
+                                    <SegmentPaceChart
+                                        checkpoints={participant.checkpoints}
+                                        waypoints={elevationWaypoints || []}
+                                    />
+
                                     {/* Elevation Chart Card */}
                                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col h-[400px]">
                                         <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                                            <h3 className="text-sm font-bold uppercase text-slate-900 dark:text-slate-100">Elevation Profile</h3>
-                                            <div className="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
-                                                <span className="flex items-center gap-1.5">
-                                                    <span className="w-2 h-2 rounded-full bg-[#100d67] dark:bg-blue-400"></span>
-                                                    Elevation
-                                                </span>
+                                            <h3 className="text-sm font-bold uppercase text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                                <span className="text-lg">⛰️</span> Elevation Profile
+                                            </h3>
+                                            <div className="text-[10px] uppercase font-bold text-slate-400">
+                                                {Math.round(totalElevationGain)}m Gain
                                             </div>
                                         </div>
                                         <div className="flex-1 min-h-0 relative">
@@ -504,7 +495,6 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                             )}
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
                         </div>

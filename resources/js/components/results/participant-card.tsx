@@ -196,8 +196,36 @@ export function ParticipantCard({ participant, onClick }: Props) {
 
                     <div className="w-20 text-right">
                         <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">GAP</div>
-                        <div className="font-mono text-xs font-medium text-slate-500 dark:text-slate-400">
-                            {participant.gap || '-'}
+                        <div className="flex items-center justify-end gap-1.5">
+                            {/* Rank Trend Indicator */}
+                            {(() => {
+                                // Logic: Find valid ranks to compare
+                                const validCheckpoints = participant.checkpoints.filter(cp => cp.overallRank !== null && cp.overallRank > 0);
+                                if (validCheckpoints.length >= 2) {
+                                    const currentRank = validCheckpoints[validCheckpoints.length - 1].overallRank!;
+                                    const prevRank = validCheckpoints[validCheckpoints.length - 2].overallRank!;
+                                    const diff = prevRank - currentRank;
+
+                                    // Improved (Rank got smaller, e.g. 10 -> 5): Diff = 5 (>0) -> Green Up
+                                    // Worsened (Rank got bigger, e.g. 5 -> 10): Diff = -5 (<0) -> Red Down
+
+                                    if (diff !== 0) {
+                                        const isImproved = diff > 0;
+                                        return (
+                                            <div className="flex flex-col items-center justify-center -space-y-0.5" title={`Rank ${isImproved ? 'Improved' : 'Dropped'} from ${prevRank} to ${currentRank}`}>
+                                                <div
+                                                    className={`w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[6px] ${isImproved ? 'border-b-emerald-500' : 'border-b-red-500 rotate-180'}`}
+                                                ></div>
+                                            </div>
+                                        );
+                                    }
+                                }
+                                return null;
+                            })()}
+
+                            <div className="font-mono text-xs font-medium text-slate-500 dark:text-slate-400">
+                                {participant.gap || '-'}
+                            </div>
                         </div>
                     </div>
 
