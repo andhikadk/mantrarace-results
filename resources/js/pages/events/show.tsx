@@ -162,7 +162,11 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
 
                 {elevationData.length > 0 && (
                     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-                        <ElevationChart data={elevationData} waypoints={elevationWaypoints} />
+                        <ElevationChart
+                            data={elevationData}
+                            waypoints={elevationWaypoints}
+                            className="h-[300px] md:h-[320px]"
+                        />
                     </div>
                 )}
 

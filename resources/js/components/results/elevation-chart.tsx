@@ -16,9 +16,10 @@ interface Waypoint {
 interface Props {
     data: ElevationPoint[];
     waypoints?: Waypoint[];
+    className?: string;
 }
 
-export function ElevationChart({ data, waypoints = [] }: Props) {
+export function ElevationChart({ data, waypoints = [], className }: Props) {
     const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
     const { options, series } = useMemo(() => {
@@ -157,7 +158,7 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
     }
 
     return (
-        <div className="w-full h-full min-h-0">
+        <div className={`w-full h-full min-h-0 ${className || ''}`}>
             <Chart
                 key={`elevation-${waypoints.length}-${data.length}`}
                 options={options}
