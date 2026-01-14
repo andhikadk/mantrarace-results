@@ -46,9 +46,16 @@ class RaceResultService
         $mapStart = microtime(true);
         $mapped = collect($rawData)
             ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints))
-            ->sortBy(fn (ParticipantData $participant) => $participant->overallRank > 0
-                ? $participant->overallRank
-                : PHP_INT_MAX)
+            ->sort(function (ParticipantData $a, ParticipantData $b) {
+                $rankA = $a->overallRank > 0 ? $a->overallRank : PHP_INT_MAX;
+                $rankB = $b->overallRank > 0 ? $b->overallRank : PHP_INT_MAX;
+
+                if ($rankA === $rankB) {
+                    return strnatcmp($a->bib, $b->bib);
+                }
+
+                return $rankA <=> $rankB;
+            })
             ->values();
         Log::info('raceresult.map', [
             'category_id' => $category->id,

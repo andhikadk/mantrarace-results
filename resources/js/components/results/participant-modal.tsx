@@ -477,7 +477,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col h-[400px]">
                                         <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
                                             <h3 className="text-sm font-bold uppercase text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                                                <span className="text-lg">⛰️</span> Elevation Profile
+                                                Elevation Profile
                                             </h3>
                                             <div className="text-[10px] uppercase font-bold text-slate-400">
                                                 {Math.round(totalElevationGain)}m Gain

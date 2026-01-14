@@ -210,7 +210,7 @@ export function SegmentPaceChart({ checkpoints, waypoints }: Props) {
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden mb-4">
             <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 border-b border-slate-200 dark:border-slate-800">
                 <h3 className="text-sm font-bold uppercase text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <span className="text-lg">🏃</span> Segment Pace
+                    Segment Pace
                 </h3>
             </div>
             <div className="p-2 md:p-4 min-h-[200px]">

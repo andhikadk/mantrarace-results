@@ -1,5 +1,6 @@
 import { getDisplayStatus, getFlagCode, getStatusBadge } from '@/lib/participantUtils';
 import { normalizeGender } from '@/lib/normalizeGender';
+import { Mars, Venus, Users } from 'lucide-react';
 
 export interface Participant {
     overallRank: number;
@@ -38,9 +39,17 @@ function StatusBadge({ status }: { status: string }) {
     );
 }
 
+function GenderIcon({ gender }: { gender: string }) {
+    const normalized = normalizeGender(gender)?.toUpperCase();
+    if (normalized === 'MALE') return <Mars className="h-3 w-3 sm:h-3.5 sm:w-3.5" />;
+    if (normalized === 'FEMALE') return <Venus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />;
+    return <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" />;
+}
+
 export function ParticipantCard({ participant, onClick }: Props) {
     const displayStatus = getDisplayStatus(participant.status, participant.finishTime);
     const flagCode = getFlagCode(participant.nation);
+    const normalizedGen = normalizeGender(participant.gender)?.toUpperCase() || participant.gender?.toUpperCase() || '-';
 
     return (
         <div className="w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-none md:rounded-none md:border-x-0 md:border-t-0 md:px-4 hover:bg-[#efefef] dark:hover:bg-slate-800">
@@ -105,10 +114,9 @@ export function ParticipantCard({ participant, onClick }: Props) {
                                     <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-0.5">
                                         GENDER
                                     </div>
-                                    <div className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                                        {normalizeGender(participant.gender)?.toUpperCase() ||
-                                            participant.gender?.toUpperCase() ||
-                                            '-'}
+                                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                                        <GenderIcon gender={participant.gender} />
+                                        {normalizedGen}
                                     </div>
                                 </div>
 
@@ -182,8 +190,9 @@ export function ParticipantCard({ participant, onClick }: Props) {
 
                     <div className="w-20 text-right">
                         <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">GENDER</div>
-                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                            {normalizeGender(participant.gender)?.toUpperCase() || participant.gender?.toUpperCase() || '-'}
+                        <div className="flex items-center justify-end gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                            <GenderIcon gender={participant.gender} />
+                            {normalizedGen}
                         </div>
                     </div>
 
