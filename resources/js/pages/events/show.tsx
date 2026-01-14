@@ -161,7 +161,9 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                 <EventHeader event={event} isLive={isLive} />
 
                 {elevationData.length > 0 && (
-                    <ElevationChart data={elevationData} waypoints={elevationWaypoints} />
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+                        <ElevationChart data={elevationData} waypoints={elevationWaypoints} />
+                    </div>
                 )}
 
                 {categories.length > 1 && (
