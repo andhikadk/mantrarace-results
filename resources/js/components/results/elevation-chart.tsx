@@ -157,19 +157,15 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
     }
 
     return (
-        <div className="bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
-            <div className="mx-auto max-w-6xl px-4 py-3">
-                <div className="h-[200px] md:h-[240px]">
-                    <Chart
-                        key={`elevation-${waypoints.length}-${data.length}`}
-                        options={options}
-                        series={series}
-                        type="area"
-                        height="100%"
-                        width="100%"
-                    />
-                </div>
-            </div>
+        <div className="w-full h-full min-h-0">
+            <Chart
+                key={`elevation-${waypoints.length}-${data.length}`}
+                options={options}
+                series={series}
+                type="area"
+                height="100%"
+                width="100%"
+            />
         </div>
     );
 }
