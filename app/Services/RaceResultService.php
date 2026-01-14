@@ -99,9 +99,13 @@ class RaceResultService
      */
     private function mapParticipant(array $row, Collection $checkpoints): ParticipantData
     {
+        $status = $row['Status'] ?? '';
+        // Only trust rank if status is explicitly FINISHED
+        $isFinished = strtolower($status) === 'finished';
+
         return new ParticipantData(
-            overallRank: (int) ($row['Overall Rank'] ?? 0),
-            genderRank: (int) ($row['Gender Rank'] ?? 0),
+            overallRank: $isFinished ? (int) ($row['Overall Rank'] ?? 0) : 0,
+            genderRank: $isFinished ? (int) ($row['Gender Rank'] ?? 0) : 0,
             bib: (string) ($row['BIB'] ?? ''),
             name: $this->cleanName($row['Name'] ?? ''),
             gender: $this->normalizeGender($row['GENDER'] ?? ''),
@@ -110,7 +114,7 @@ class RaceResultService
             finishTime: $this->cleanTimeValue($row['Finish Time'] ?? null),
             netTime: $this->cleanTimeValue($row['NetTime'] ?? null),
             gap: $row['Gap'] ?? null,
-            status: $row['Status'] ?? '',
+            status: $status,
             checkpoints: $this->mapCheckpoints($row, $checkpoints),
         );
     }
@@ -307,17 +311,31 @@ class RaceResultService
         $checkpoints = $category->checkpoints;
         $mapStart = microtime(true);
         $mapped = collect($rawData)
-            ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints))
-            ->sort(function (ParticipantData $a, ParticipantData $b) {
-                $rankA = $a->overallRank > 0 ? $a->overallRank : PHP_INT_MAX;
-                $rankB = $b->overallRank > 0 ? $b->overallRank : PHP_INT_MAX;
+            ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints));
 
-                if ($rankA === $rankB) {
-                    return strnatcmp($a->bib, $b->bib);
-                }
+        // Check if anyone has reached CP1 (index 0)
+        $hasCp1 = $mapped->contains(function (ParticipantData $p) {
+            return isset($p->checkpoints[0]) && ! empty($p->checkpoints[0]->time);
+        });
 
-                return $rankA <=> $rankB;
-            })
+        $mapped = $mapped->sort(function (ParticipantData $a, ParticipantData $b) use ($hasCp1) {
+            // If race hasn't started or no one passed CP1, sort by BIB
+            if (! $hasCp1) {
+                // Remove non-numeric characters for proper numeric sorting if needed,
+                // but BIB is string so natural sort is best
+                return strnatcmp($a->bib, $b->bib);
+            }
+
+            // Normal leaderboard sorting
+            $rankA = $a->overallRank > 0 ? $a->overallRank : PHP_INT_MAX;
+            $rankB = $b->overallRank > 0 ? $b->overallRank : PHP_INT_MAX;
+
+            if ($rankA === $rankB) {
+                return strnatcmp($a->bib, $b->bib);
+            }
+
+            return $rankA <=> $rankB;
+        })
             ->values();
 
         if ($this->shouldLogMetrics()) {
