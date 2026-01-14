@@ -18,8 +18,8 @@ readonly class CheckpointData
             'name' => $this->name,
             'time' => $this->time,
             'segment' => $this->segment,
-            'overall_rank' => $this->overallRank,
-            'gender_rank' => $this->genderRank,
+            'overallRank' => $this->overallRank,
+            'genderRank' => $this->genderRank,
         ];
     }
 }

@@ -406,7 +406,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                                     return (
                                                         <div key={idx} className={`relative pb-8 last:pb-0 ${!isPassed ? 'opacity-60 grayscale' : ''}`}>
                                                             {/* Dot Indicator */}
-                                                            <div className={`absolute -left-[23px] top-1.5 w-3 h-3 rounded-full border-2 z-10 transition-all duration-300 ${isPassed
+                                                            <div className={`absolute -left-[18px] top-1 w-3 h-3 rounded-full border-2 z-10 transition-all duration-300 ${isPassed
                                                                 ? 'bg-[#100d67] border-[#100d67] dark:bg-indigo-500 dark:border-indigo-500'
                                                                 : 'bg-slate-100 border-slate-300 dark:bg-slate-800 dark:border-slate-700'
                                                                 } ${isLastPassed ? 'ring-4 ring-indigo-100 dark:ring-indigo-900/40 scale-110' : ''}`}></div>
@@ -437,11 +437,11 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                                                 {isPassed && (
                                                                     <div className="flex gap-2 mt-1.5">
                                                                         <div className="inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                                                                            <span className="text-[9px] uppercase text-slate-400">Rank</span>
+                                                                            <span className="text-[9px] uppercase text-slate-400">Overall Rank</span>
                                                                             <span className="font-mono font-bold">{cp.overallRank || '-'}</span>
                                                                         </div>
                                                                         <div className="inline-flex items-center gap-1 rounded bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/30">
-                                                                            <span className="text-[9px] uppercase text-indigo-400/80">Gen</span>
+                                                                            <span className="text-[9px] uppercase text-indigo-400/80">Gender Rank</span>
                                                                             <span className="font-mono font-bold">{cp.genderRank || '-'}</span>
                                                                         </div>
                                                                     </div>
@@ -486,7 +486,10 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                         <div className="flex-1 min-h-0 relative">
                                             {elevationData && elevationData.length > 0 ? (
                                                 <div className="absolute inset-0">
-                                                    <ElevationChart data={elevationData} waypoints={elevationWaypoints || []} />
+                                                    <ElevationChart
+                                                        data={elevationData}
+                                                        waypoints={elevationWaypoints || []}
+                                                    />
                                                 </div>
                                             ) : (
                                                 <div className="flex h-full items-center justify-center text-slate-400 text-sm">

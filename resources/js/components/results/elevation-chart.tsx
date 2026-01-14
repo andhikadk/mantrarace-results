@@ -38,33 +38,43 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
         const maxEle = Math.max(...elevations);
         const maxDistance = data[data.length - 1]?.distance || 0;
 
-        // Create xaxis annotations for waypoints (vertical lines)
-        const xaxisAnnotations = waypoints.map((wp) => ({
-            x: wp.distance,
-            borderColor: waypointColor,
-            strokeDashArray: 0,
-            label: {
-                borderColor: waypointColor,
-                borderWidth: 1,
-                borderRadius: 2,
-                text: wp.name,
-                textAnchor: 'middle',
-                position: 'top',
-                orientation: 'horizontal',
-                style: {
-                    color: '#fff',
-                    background: waypointColor,
-                    fontSize: '9px',
-                    fontWeight: '600',
-                    padding: {
-                        left: 4,
-                        right: 4,
-                        top: 2,
-                        bottom: 2,
-                    },
+        // Create point annotations for waypoints (dots instead of lines)
+        const waypointAnnotations = waypoints.map((wp) => {
+            // Find closest elevation point
+            const closestPoint = data.reduce((prev, curr) => {
+                return (Math.abs(curr.distance - wp.distance) < Math.abs(prev.distance - wp.distance) ? curr : prev);
+            }, data[0]);
+
+            return {
+                x: wp.distance,
+                y: closestPoint ? closestPoint.elevation : 0,
+                marker: {
+                    size: 4,
+                    fillColor: waypointColor,
+                    strokeColor: '#fff',
+                    strokeWidth: 2,
+                    shape: 'circle',
+                    radius: 2,
                 },
-            },
-        }));
+                label: {
+                    borderWidth: 0,
+                    style: {
+                        color: waypointColor,
+                        background: 'transparent',
+                        fontSize: '9px',
+                        fontWeight: 'bold',
+                        padding: {
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            bottom: 5, // Push label up
+                        }
+                    },
+                    text: wp.name,
+                    offsetY: -10,
+                }
+            };
+        });
 
         const chartOptions: ApexOptions = {
             chart: {
@@ -99,7 +109,8 @@ export function ElevationChart({ data, waypoints = [] }: Props) {
                 padding: { left: 10, right: 10 },
             },
             annotations: {
-                xaxis: xaxisAnnotations,
+                points: waypointAnnotations,
+                xaxis: [],
             },
             xaxis: {
                 type: 'numeric',

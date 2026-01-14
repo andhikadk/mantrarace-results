@@ -7,7 +7,7 @@ interface Props {
 
 export function EventHeader({ event, isLive }: Props) {
     return (
-        <div className="bg-[#efefef] dark:bg-slate-950 pt-6 pb-2">
+        <div className="bg-white dark:bg-slate-950 pt-6 pb-2">
             <div className="mx-auto max-w-6xl px-4">
                 <div className="flex items-start justify-between">
                     <div className="flex flex-col gap-1">
