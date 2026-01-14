@@ -79,7 +79,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
 
                                 {/* Name + Flag + Club */}
                                 <div className="min-w-0 flex-1">
-                                    <div className="text-base font-bold uppercase tracking-tight text-slate-900 dark:text-slate-100 leading-tight truncate">
+                                    <div className="text-base font-bold uppercase tracking-tight text-slate-900 dark:text-slate-100 leading-tight wrap-break-word">
                                         {participant.name}
                                         {flagCode && (
                                             <span
@@ -89,8 +89,9 @@ export function ParticipantCard({ participant, onClick }: Props) {
                                             />
                                         )}
                                     </div>
+
                                     {participant.club && (
-                                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400 truncate">
+                                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400 wrap-break-word">
                                             {participant.club}
                                         </div>
                                     )}

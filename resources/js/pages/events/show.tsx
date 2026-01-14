@@ -241,6 +241,8 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                 eventSlug={event.slug}
                 categorySlug={activeCategory?.slug ?? ''}
                 certificateEnabled={activeCategory?.certificateEnabled}
+                elevationData={elevationData}
+                elevationWaypoints={elevationWaypoints}
             />
         </>
     );
