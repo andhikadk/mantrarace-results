@@ -70,7 +70,6 @@ export function SegmentPaceChart({ checkpoints, waypoints }: Props) {
             // --- 2. INDEX-BASED DISTANCE CALCULATION ---
             // Fallback to Index if standard name lookup fails (or just use index to be safe/consistent with Live Stats)
             let segmentDistance = 0;
-            let usedDistance = 0;
 
             // Try exact name match first (most accurate if names align)
             const wpIndexByName = waypoints.findIndex(wp => wp.name === cp.name);

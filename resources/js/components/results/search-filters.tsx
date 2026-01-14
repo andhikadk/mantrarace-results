@@ -1,7 +1,11 @@
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import { Search } from 'lucide-react';
-import { useCallback } from 'react';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+} from '@/components/ui/select';
+import { Mars, Search, Users, Venus } from 'lucide-react';
 
 interface Props {
     query: string;
@@ -10,64 +14,89 @@ interface Props {
     onGenderFilter: (gender: string) => void;
 }
 
-type GenderTab = 'OVERALL' | 'MALE' | 'FEMALE';
-
 export function SearchFilters({
     query,
     genderFilter,
     onSearch,
     onGenderFilter,
 }: Props) {
-    const handleGenderChange = useCallback((tab: GenderTab) => {
-        if (tab === 'OVERALL') {
-            onGenderFilter('all');
-        } else if (tab === 'MALE') {
-            onGenderFilter('Male');
-        } else if (tab === 'FEMALE') {
-            onGenderFilter('Female');
-        }
-    }, [onGenderFilter]);
-
-    const activeGenderTab: GenderTab = genderFilter === 'Male'
+    const activeValue = genderFilter === 'Male'
         ? 'MALE'
         : genderFilter === 'Female'
             ? 'FEMALE'
             : 'OVERALL';
 
+    const handleValueChange = (value: string) => {
+        if (value === 'OVERALL') onGenderFilter('all');
+        if (value === 'MALE') onGenderFilter('Male');
+        if (value === 'FEMALE') onGenderFilter('Female');
+    };
+
+    const getIcon = (value: string) => {
+        switch (value) {
+            case 'MALE': return <Mars className="h-4 w-4" />;
+            case 'FEMALE': return <Venus className="h-4 w-4" />;
+            default: return <Users className="h-4 w-4" />;
+        }
+    };
+
+    const getLabel = (value: string) => {
+        switch (value) {
+            case 'MALE': return 'Male';
+            case 'FEMALE': return 'Female';
+            default: return 'Overall';
+        }
+    };
+
     return (
-        <div className="bg-[#efefef] dark:bg-slate-950 sticky top-[53px] z-10">
-            <div className="mx-auto max-w-6xl px-4 py-4 space-y-4 md:space-y-0 md:flex md:items-center md:gap-4">
-                {/* Search Bar */}
-                <div className="relative md:flex-1">
-                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-                    <Input
-                        type="text"
-                        placeholder="Search athlete or bib..."
-                        value={query}
-                        onChange={(e) => onSearch(e.target.value)}
-                        className="h-12 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-11 shadow-none placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-900 dark:text-slate-100 focus-visible:ring-1 focus-visible:ring-[#100d67]/30 dark:focus-visible:ring-slate-600"
-                    />
-                </div>
+        <div className="bg-[#efefef] dark:bg-slate-950 sticky top-[53px] z-10 transition-all duration-200">
+            <div className="mx-auto max-w-6xl px-4 py-4">
+                <div className="flex items-center gap-3">
+                    {/* Search Bar */}
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                        <Input
+                            type="text"
+                            placeholder="Search athlete or bib..."
+                            value={query}
+                            onChange={(e) => onSearch(e.target.value)}
+                            className="h-12 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-11 shadow-none placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-900 dark:text-slate-100 focus-visible:ring-1 focus-visible:ring-[#100d67]/30 dark:focus-visible:ring-slate-600"
+                        />
+                    </div>
 
-                <div className="flex rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shadow-none md:min-w-[260px]">
-                    {(['OVERALL', 'MALE', 'FEMALE'] as const).map((tab) => (
-                        <button
-                            key={tab}
-                            type="button"
-                            onClick={() => handleGenderChange(tab)}
-                            className={cn(
-                                'flex-1 rounded-sm py-2 text-xs font-bold transition-colors',
-                                activeGenderTab === tab
-                                    ? 'bg-[#100d67]/10 text-[#100d67] dark:bg-slate-800 dark:text-slate-100'
-                                    : 'text-slate-500 hover:text-[#100d67] dark:text-slate-400 dark:hover:text-slate-100'
-                            )}
-                        >
-                            {tab}
-                        </button>
-                    ))}
+                    {/* Gender Filter Dropdown */}
+                    <div className="shrink-0">
+                        <Select value={activeValue} onValueChange={handleValueChange}>
+                            <SelectTrigger className="h-12 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-bold uppercase focus:ring-[#100d67]/30 dark:focus:ring-slate-600 px-3 md:w-[140px]">
+                                <div className="flex items-center gap-2 mr-2 md:mr-0">
+                                    {getIcon(activeValue)}
+                                    <span className="hidden md:inline truncate">{getLabel(activeValue)}</span>
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent align="end">
+                                <SelectItem value="OVERALL">
+                                    <div className="flex items-center gap-2 font-bold uppercase text-slate-600 dark:text-slate-400">
+                                        <Users className="h-4 w-4" />
+                                        <span>Overall</span>
+                                    </div>
+                                </SelectItem>
+                                <SelectItem value="MALE">
+                                    <div className="flex items-center gap-2 font-bold uppercase text-slate-600 dark:text-slate-400">
+                                        <Mars className="h-4 w-4" />
+                                        <span>Male</span>
+                                    </div>
+                                </SelectItem>
+                                <SelectItem value="FEMALE">
+                                    <div className="flex items-center gap-2 font-bold uppercase text-slate-600 dark:text-slate-400">
+                                        <Venus className="h-4 w-4" />
+                                        <span>Female</span>
+                                    </div>
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
-
             </div>
-        </div>
+        </div >
     );
 }

@@ -60,7 +60,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
     // 1. Find the last checkpoint index with a time
     let lastReachedCheckpointIndex = -1;
     participant.checkpoints.forEach((cp, idx) => {
-        if (!!cp.time) lastReachedCheckpointIndex = idx;
+        if (cp.time) lastReachedCheckpointIndex = idx;
     });
 
     const lastReachedCheckpoint = lastReachedCheckpointIndex >= 0
