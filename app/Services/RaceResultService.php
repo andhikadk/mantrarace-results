@@ -56,7 +56,7 @@ class RaceResultService
      *
      * @return array{fetched_at:int,items:array<int,array<string,mixed>>}
      */
-    public function refreshLeaderboardCache(Category $category): array
+    public function refreshLeaderboardCache(Category $category, bool $force = false): array
     {
         $cacheKey = $this->payloadCacheKey($category);
         $lockKey = $this->payloadLockKey($category);
@@ -67,10 +67,13 @@ class RaceResultService
         $lock = Cache::lock($lockKey, $lockSeconds);
 
         try {
-            return $lock->block($lockWaitSeconds, function () use ($cacheKey, $category, $staleTtl) {
-                $payload = Cache::get($cacheKey);
-                if ($this->isValidPayload($payload)) {
-                    return $payload;
+            return $lock->block($lockWaitSeconds, function () use ($cacheKey, $category, $staleTtl, $force) {
+                // If not forcing, check if we already have fresh data (handle thundering herd)
+                if (!$force) {
+                    $payload = Cache::get($cacheKey);
+                    if ($this->isValidPayload($payload)) {
+                        return $payload;
+                    }
                 }
 
                 $payload = $this->buildPayload($category);

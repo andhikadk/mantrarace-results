@@ -1,4 +1,8 @@
 import { type Event } from '@/types';
+import { router } from '@inertiajs/react';
+import { RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface Props {
     event: Event;
@@ -27,8 +31,38 @@ export function EventHeader({ event, isLive }: Props) {
                             {event.title}
                         </h1>
                     </div>
+                    <div className="flex items-start gap-2">
+                        <RefreshButton />
+                    </div>
                 </div>
             </div>
         </div>
+    );
+}
+
+function RefreshButton() {
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleRefresh = () => {
+        setIsLoading(true);
+        router.reload({
+            headers: {
+                'X-Force-Refresh': 'true',
+            },
+            only: ['leaderboard', 'isLive'],
+            onFinish: () => setIsLoading(false),
+        });
+    };
+
+    return (
+        <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="h-8 gap-2 text-xs"
+        >
+            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+        </Button>
     );
 }

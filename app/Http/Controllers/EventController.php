@@ -26,6 +26,13 @@ class EventController extends Controller
             ? $raceService->getLeaderboardPayload($defaultCategory)
             : [];
 
+        $shouldRefresh = $request->boolean('refresh') || $request->header('X-Force-Refresh');
+
+        if ($shouldRefresh && $defaultCategory) {
+            $leaderboardpayload = $raceService->refreshLeaderboardCache($defaultCategory, true);
+            $leaderboard = $leaderboardpayload['items'];
+        }
+
         $gpxData = ['elevation' => [], 'waypoints' => []];
         if ($defaultCategory && $defaultCategory->gpx_path) {
             $gpxData = $gpxService->parse($defaultCategory->gpx_path);
