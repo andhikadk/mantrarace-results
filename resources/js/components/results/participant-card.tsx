@@ -51,58 +51,82 @@ export function ParticipantCard({ participant, onClick }: Props) {
             >
                 {/* Mobile Card */}
                 <div className="md:hidden">
-                    <div className="mb-4 flex items-center gap-3">
-                        <span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-sm border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-lg">
-                            {flagCode ? (
-                                <span
-                                    className={`fi fi-${flagCode} h-4 w-6`}
-                                    title={participant.nation}
-                                    aria-label={participant.nation}
-                                />
-                            ) : (
-                                <span className="text-[10px] text-slate-400 dark:text-slate-500">--</span>
-                            )}
-                        </span>
-                        <div>
-                            <div className="text-base font-bold uppercase tracking-tight text-slate-900 dark:text-slate-100">
-                                {participant.name}
-                            </div>
-                            <div className="relative mt-1 inline-flex h-8 min-w-[56px] items-center justify-center border border-[#100d67] dark:border-slate-600 bg-white dark:bg-slate-950 px-3 font-mono text-sm font-extrabold text-[#100d67] dark:text-slate-100 shadow-[inset_0_0_0_1px_rgba(16,13,103,0.06)] ring-1 ring-slate-200 dark:ring-slate-700">
-                                <span className="absolute left-1 top-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
-                                <span className="absolute right-1 top-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
-                                <span className="absolute left-1 bottom-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
-                                <span className="absolute right-1 bottom-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
-                                {participant.bib}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-[auto_1fr_auto] gap-x-8 gap-y-4">
-                        <div className="flex flex-col items-center">
+                    <div className="flex gap-4">
+                        {/* LEFT: RANK */}
+                        <div className="flex shrink-0 flex-col items-center justify-center">
                             <span className="font-mono text-3xl font-bold italic leading-none text-[#f00102] dark:text-red-400">
-                                {participant.overallRank > 0 ? participant.overallRank.toString().padStart(2, '0') : '-'}
+                                {participant.overallRank > 0
+                                    ? participant.overallRank.toString().padStart(2, '0')
+                                    : '-'}
                             </span>
-                            <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">RANK</span>
+                            <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">
+                                RANK
+                            </span>
                         </div>
 
-                        <div className="flex flex-col justify-between">
-                            <div>
-                                <div className="mt-2 text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-0.5">GENDER</div>
-                                <div className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                                    {normalizeGender(participant.gender)?.toUpperCase() || participant.gender?.toUpperCase() || '-'}
+                        {/* RIGHT: ITEM LAINNYA (2 rows) */}
+                        <div className="min-w-0 flex-1">
+                            {/* ROW 1: BIB + Name/Flag + Club */}
+                            <div className="flex items-start gap-3">
+                                {/* BIB */}
+                                <span className="relative inline-flex h-8 min-w-[56px] items-center justify-center border border-[#100d67] dark:border-slate-600 bg-white dark:bg-slate-950 px-3 font-mono font-extrabold text-[#100d67] dark:text-slate-100 shadow-[inset_0_0_0_1px_rgba(16,13,103,0.06)] ring-1 ring-slate-200 dark:ring-slate-700 shrink-0">
+                                    <span className="absolute left-1 top-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                    <span className="absolute right-1 top-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                    <span className="absolute left-1 bottom-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                    <span className="absolute right-1 bottom-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                    {participant.bib}
+                                </span>
+
+                                {/* Name + Flag + Club */}
+                                <div className="min-w-0 flex-1">
+                                    <div className="text-base font-bold uppercase tracking-tight text-slate-900 dark:text-slate-100 leading-tight truncate">
+                                        {participant.name}
+                                        {flagCode && (
+                                            <span
+                                                className={`fi fi-${flagCode} ml-2 align-middle`}
+                                                title={participant.nation}
+                                                aria-label={participant.nation}
+                                            />
+                                        )}
+                                    </div>
+                                    {participant.club && (
+                                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400 truncate">
+                                            {participant.club}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="flex flex-col items-end justify-between">
-                            <div>
-                                <div className="mb-1 text-right text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">STATUS</div>
-                                <StatusBadge status={displayStatus} />
-                            </div>
-                            <div className="text-right">
-                                <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-0.5">TIME</div>
-                                <div className="font-mono text-base font-bold text-slate-900 dark:text-slate-100">
-                                    {participant.finishTime || '--:--:--'}
+                            {/* ROW 2: SISANYA - 1 ROW */}
+                            <div className="mt-3 flex items-center justify-between gap-4">
+                                {/* GENDER */}
+                                <div>
+                                    <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-0.5">
+                                        GENDER
+                                    </div>
+                                    <div className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                                        {normalizeGender(participant.gender)?.toUpperCase() ||
+                                            participant.gender?.toUpperCase() ||
+                                            '-'}
+                                    </div>
+                                </div>
+
+                                {/* TIME */}
+                                <div className="text-right">
+                                    <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-0.5">
+                                        TIME
+                                    </div>
+                                    <div className="font-mono text-base font-bold text-slate-900 dark:text-slate-100">
+                                        {participant.finishTime || '--:--:--'}
+                                    </div>
+                                </div>
+
+                                {/* STATUS */}
+                                <div className="text-center">
+                                    <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-0.5">
+                                        STATUS
+                                    </div>
+                                    <StatusBadge status={displayStatus} />
                                 </div>
                             </div>
                         </div>
