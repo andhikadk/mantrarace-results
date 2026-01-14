@@ -18,6 +18,7 @@ class Event extends Model
         return [
             'start_date' => 'datetime',
             'end_date' => 'datetime',
+            'certificate_availability_date' => 'datetime',
         ];
     }
 

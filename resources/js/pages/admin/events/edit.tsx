@@ -24,6 +24,9 @@ export default function EventEdit({ event }: Props) {
         location: event.location,
         start_date: event.start_date.split('T')[0],
         end_date: event.end_date.split('T')[0],
+        certificate_availability_date: event.certificate_availability_date
+            ? new Date(event.certificate_availability_date).toISOString().slice(0, 16)
+            : '',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -114,6 +117,29 @@ export default function EventEdit({ event }: Props) {
                                 </div>
                             </div>
 
+                            <div className="space-y-2">
+                                <Label htmlFor="certificate_availability_date">
+                                    Certificate Availability Date (Optional)
+                                </Label>
+                                <Input
+                                    id="certificate_availability_date"
+                                    type="datetime-local"
+                                    value={data.certificate_availability_date}
+                                    onChange={(e) =>
+                                        setData('certificate_availability_date', e.target.value)
+                                    }
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Leave blank to use Event End Date.
+                                </p>
+                                {errors.certificate_availability_date && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.certificate_availability_date}
+                                    </p>
+                                )}
+                            </div>
+
+
                             <div className="flex gap-2 pt-4">
                                 <Button type="submit" disabled={processing}>
                                     {processing ? 'Saving...' : 'Save Changes'}
@@ -126,6 +152,6 @@ export default function EventEdit({ event }: Props) {
                     </CardContent>
                 </Card>
             </div>
-        </AppLayout>
+        </AppLayout >
     );
 }

@@ -12,7 +12,7 @@ class CertificateService
     /**
      * Generate certificate PDF for a participant
      */
-    public function generate(Category $category, array $participant): ?string
+    public function generate(Category $category, array $participant, ?string $watermarkText = null): ?string
     {
         $certificate = $category->certificate;
 
@@ -20,13 +20,13 @@ class CertificateService
             return null;
         }
 
-        return $this->generateWithConfig($category, $participant, $certificate->fields_config ?? $this->getDefaultConfig());
+        return $this->generateWithConfig($category, $participant, $certificate->fields_config ?? $this->getDefaultConfig(), false, $watermarkText);
     }
 
     /**
      * Generate certificate PDF with custom field configuration (for preview)
      */
-    public function generateWithConfig(Category $category, array $participant, array $fieldsConfig, bool $isPreview = false): ?string
+    public function generateWithConfig(Category $category, array $participant, array $fieldsConfig, bool $isPreview = false, ?string $watermarkText = null): ?string
     {
         $certificate = $category->certificate;
 
@@ -66,6 +66,12 @@ class CertificateService
         }
 
         $mpdf = new Mpdf($config);
+
+        if ($watermarkText) {
+            $mpdf->SetWatermarkText($watermarkText, 0.2);
+            $mpdf->showWatermarkText = true;
+            $mpdf->watermark_font = 'DejaVuSans-Bold';
+        }
 
         // Import PDF template as background
         $mpdf->SetSourceFile($templatePath);

@@ -19,6 +19,7 @@ export default function EventCreate() {
         location: '',
         start_date: '',
         end_date: '',
+        certificate_availability_date: '',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -109,6 +110,29 @@ export default function EventCreate() {
                                 </div>
                             </div>
 
+                            <div className="space-y-2">
+                                <Label htmlFor="certificate_availability_date">
+                                    Certificate Availability Date (Optional)
+                                </Label>
+                                <Input
+                                    id="certificate_availability_date"
+                                    type="datetime-local"
+                                    value={data.certificate_availability_date}
+                                    onChange={(e) =>
+                                        setData('certificate_availability_date', e.target.value)
+                                    }
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Leave blank to use Event End Date.
+                                </p>
+                                {errors.certificate_availability_date && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.certificate_availability_date}
+                                    </p>
+                                )}
+                            </div>
+
+
                             <div className="flex gap-2 pt-4">
                                 <Button type="submit" disabled={processing}>
                                     {processing ? 'Creating...' : 'Create Event'}
@@ -121,6 +145,6 @@ export default function EventCreate() {
                     </CardContent>
                 </Card>
             </div>
-        </AppLayout>
+        </AppLayout >
     );
 }
