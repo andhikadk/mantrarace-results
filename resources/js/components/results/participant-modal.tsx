@@ -248,10 +248,6 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                 <ChevronLeft className="h-5 w-5" />
                                 Back to Results
                             </Button>
-                            <div className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                                <span className="font-mono text-[#100d67] dark:text-indigo-400">#{participant.bib}</span>
-                                <span className="uppercase">{participant.name}</span>
-                            </div>
                         </div>
 
                         <div className="flex-1 p-4 lg:p-6 lg:grid lg:grid-cols-12 lg:gap-8 max-w-7xl mx-auto w-full">
