@@ -28,14 +28,17 @@ class GpxParserService
         // Register GPX namespace
         $xml->registerXPathNamespace('gpx', 'http://www.topografix.com/GPX/1/1');
 
-        // Parse elevation data from track points
-        $elevationData = $this->parseElevationPoints($xml);
+        // 1. Parse FULL track points (no sampling)
+        $fullTrackData = $this->parseTrackPoints($xml);
 
-        // Parse waypoints (checkpoints / POI)
-        $waypoints = $this->parseWaypoints($xml, $elevationData);
+        // 2. Parse waypoints matched against FULL track data
+        $waypoints = $this->parseWaypoints($xml, $fullTrackData);
+
+        // 3. Sample track data for chart visualization (max 200 points)
+        $sampledElevation = $this->sampleDataPoints($fullTrackData, 200);
 
         return [
-            'elevation' => $elevationData,
+            'elevation' => $sampledElevation,
             'waypoints' => $waypoints,
         ];
     }
@@ -50,7 +53,7 @@ class GpxParserService
         return $result['elevation'];
     }
 
-    private function parseElevationPoints(\SimpleXMLElement $xml): array
+    private function parseTrackPoints(\SimpleXMLElement $xml): array
     {
         // Try to find track points
         $points = $xml->xpath('//gpx:trkpt') ?: $xml->xpath('//trkpt') ?: [];
@@ -90,16 +93,15 @@ class GpxParserService
             $prevLon = $lon;
         }
 
-        // Sample data points to avoid too many data points (max 200)
-        return $this->sampleDataPoints($elevationData, 200);
+        return $elevationData;
     }
 
-    private function parseWaypoints(\SimpleXMLElement $xml, array $elevationData): array
+    private function parseWaypoints(\SimpleXMLElement $xml, array $fullTrackData): array
     {
         // Try to find waypoints
         $wpts = $xml->xpath('//gpx:wpt') ?: $xml->xpath('//wpt') ?: [];
 
-        if (empty($wpts) || empty($elevationData)) {
+        if (empty($wpts) || empty($fullTrackData)) {
             return [];
         }
 
@@ -111,9 +113,12 @@ class GpxParserService
             $name = (string) ($wpt->name ?? 'Checkpoint');
             $ele = (float) ($wpt->ele ?? 0);
 
-            // Find closest elevation point to get distance
-            $closestDistance = $this->findClosestDistance($lat, $lon, $elevationData);
-
+            // Find closest elevation point available in FULL track data
+            $closestDistance = $this->findClosestDistance($lat, $lon, $fullTrackData);
+            
+            // Only add if reasonable close (< 1km like in HTML logic)
+            // But for now purely closest to mimic simple logic
+            
             $waypoints[] = [
                 'name' => $name,
                 'distance' => $closestDistance,
@@ -121,20 +126,10 @@ class GpxParserService
             ];
         }
 
-        // Sort by distance
+        // Sort by distance for ordered display
         usort($waypoints, fn ($a, $b) => $a['distance'] <=> $b['distance']);
 
-        // Remove duplicates by name
-        $seen = [];
-        $unique = [];
-        foreach ($waypoints as $wp) {
-            if (! isset($seen[$wp['name']])) {
-                $seen[$wp['name']] = true;
-                $unique[] = $wp;
-            }
-        }
-
-        return $unique;
+        return $waypoints;
     }
 
     private function findClosestDistance(float $lat, float $lon, array $elevationData): float
@@ -150,7 +145,7 @@ class GpxParserService
             }
         }
 
-        return round($closestDistance, 2);
+        return $closestDistance;
     }
 
     /**

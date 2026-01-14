@@ -313,28 +313,53 @@ class RaceResultService
         $mapped = collect($rawData)
             ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints));
 
-        // Check if anyone has reached CP1 (index 0)
-        $hasCp1 = $mapped->contains(function (ParticipantData $p) {
-            return isset($p->checkpoints[0]) && ! empty($p->checkpoints[0]->time);
-        });
+        $mapped = $mapped->sort(function (ParticipantData $a, ParticipantData $b) {
+            $statusA = strtolower($a->status);
+            $statusB = strtolower($b->status);
+            $isFinishedA = $statusA === 'finished';
+            $isFinishedB = $statusB === 'finished';
 
-        $mapped = $mapped->sort(function (ParticipantData $a, ParticipantData $b) use ($hasCp1) {
-            // If race hasn't started or no one passed CP1, sort by BIB
-            if (! $hasCp1) {
-                // Remove non-numeric characters for proper numeric sorting if needed,
-                // but BIB is string so natural sort is best
-                return strnatcmp($a->bib, $b->bib);
+            // 1. Priority: Finished Participants
+            if ($isFinishedA && $isFinishedB) {
+                $rankA = $a->overallRank > 0 ? $a->overallRank : PHP_INT_MAX;
+                $rankB = $b->overallRank > 0 ? $b->overallRank : PHP_INT_MAX;
+
+                return $rankA === $rankB
+                   ? strnatcmp($a->bib, $b->bib)
+                   : $rankA <=> $rankB;
+            }
+            if ($isFinishedA) {
+                return -1;
+            }
+            if ($isFinishedB) {
+                return 1;
             }
 
-            // Normal leaderboard sorting
-            $rankA = $a->overallRank > 0 ? $a->overallRank : PHP_INT_MAX;
-            $rankB = $b->overallRank > 0 ? $b->overallRank : PHP_INT_MAX;
-
-            if ($rankA === $rankB) {
-                return strnatcmp($a->bib, $b->bib);
+            // 2. Priority: Furthest Checkpoint Reached (Last Position)
+            // Calculate last reached CP index for A
+            $lastCpIndexA = -1;
+            foreach ($a->checkpoints as $index => $cp) {
+                if (! empty($cp->time)) {
+                    $lastCpIndexA = $index;
+                }
             }
 
-            return $rankA <=> $rankB;
+            // Calculate last reached CP index for B
+            $lastCpIndexB = -1;
+            foreach ($b->checkpoints as $index => $cp) {
+                if (! empty($cp->time)) {
+                    $lastCpIndexB = $index;
+                }
+            }
+
+            if ($lastCpIndexA !== $lastCpIndexB) {
+                // Higher index (further distance) comes first
+                return $lastCpIndexB <=> $lastCpIndexA;
+            }
+
+            // 3. Fallback: Sort by BIB
+            // This also handles the case where race hasn't started (lastCpIndex = -1 for all)
+            return strnatcmp($a->bib, $b->bib);
         })
             ->values();
 

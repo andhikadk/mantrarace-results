@@ -39,12 +39,23 @@ export function ElevationChart({ data, waypoints = [], className }: Props) {
         const maxEle = Math.max(...elevations);
         const maxDistance = data[data.length - 1]?.distance || 0;
 
+        // Sort waypoints by distance
+        const sortedWaypoints = [...waypoints].sort((a, b) => a.distance - b.distance);
+
         // Create point annotations for waypoints (dots instead of lines)
-        const waypointAnnotations = waypoints.map((wp) => {
+        const waypointAnnotations = sortedWaypoints.map((wp, index) => {
             // Find closest elevation point
             const closestPoint = data.reduce((prev, curr) => {
                 return (Math.abs(curr.distance - wp.distance) < Math.abs(prev.distance - wp.distance) ? curr : prev);
             }, data[0]);
+
+            // Check for overlap with previous waypoint
+            const prevWp = sortedWaypoints[index - 1];
+            const isOverlapping = prevWp && Math.abs(wp.distance - prevWp.distance) < (maxDistance * 0.05); // 5% threshold
+
+            // Toggle offset direction based on index or overlap to prevent stacking
+            // If overlapping, push one up and one down explicitly, or stagger them
+            const yOffset = isOverlapping ? (index % 2 === 0 ? -25 : -5) : -10;
 
             return {
                 x: wp.distance,
@@ -72,7 +83,7 @@ export function ElevationChart({ data, waypoints = [], className }: Props) {
                         }
                     },
                     text: wp.name,
-                    offsetY: -10,
+                    offsetY: yOffset,
                 }
             };
         });
