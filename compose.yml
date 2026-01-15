@@ -1,6 +1,8 @@
 services:
   app:
     image: ghcr.io/andhikadk/mantrarace-results:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     container_name: mantra-results-app
     restart: unless-stopped
     ports:
@@ -29,6 +31,8 @@ services:
 
   queue:
     image: ghcr.io/andhikadk/mantrarace-results:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     container_name: mantra-results-queue
     restart: unless-stopped
     command: php artisan queue:work --tries=3 --timeout=90 --sleep=3
