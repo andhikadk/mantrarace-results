@@ -1,0 +1,75 @@
+services:
+  app:
+    image: ghcr.io/andhikadk/mantrarace-results:latest
+    container_name: mantra-results-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8700}:8700"
+    env_file:
+      - .env
+    environment:
+      DB_HOST: host.docker.internal
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+    volumes:
+      - storage-data:/app/storage/app
+      - logs-data:/app/storage/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - mantra-results
+    healthcheck:
+      test: ["CMD", "php", "artisan", "octane:status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  queue:
+    image: ghcr.io/andhikadk/mantrarace-results:latest
+    container_name: mantra-results-queue
+    restart: unless-stopped
+    command: php artisan queue:work --tries=3 --timeout=90 --sleep=3
+    env_file:
+      - .env
+    environment:
+      DB_HOST: host.docker.internal
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+    volumes:
+      - storage-data:/app/storage/app
+      - logs-data:/app/storage/logs
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - mantra-results
+
+  redis:
+    image: redis:7-alpine
+    container_name: mantra-results-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - mantra-results
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  mantra-results:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+  storage-data:
+    driver: local
+  logs-data:
+    driver: local
