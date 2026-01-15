@@ -248,6 +248,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                                 <ParticipantLiveStats
                                     participant={participant}
                                     isFinished={isFinished}
+                                    displayStatus={displayStatus}
                                     lastReachedCheckpoint={lastReachedCheckpoint}
                                     currentDistance={currentDistance}
                                     totalDistance={totalDistance}

@@ -161,38 +161,41 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
 
     // Auto-retry when leaderboard is unexpectedly empty
     useEffect(() => {
-        // If we have data, mark that we've received data before
+        // If we have data, mark that we've received data and skip retry logic
         if (leaderboard.length > 0) {
             hasReceivedData.current = true;
-            setIsRetrying(false);
-            setRetryCount(0);
+            // Clear any pending retry
+            if (retryTimeoutRef.current) {
+                window.clearTimeout(retryTimeoutRef.current);
+                retryTimeoutRef.current = null;
+            }
             return;
         }
 
         // Only auto-retry if:
         // 1. Leaderboard is empty
-        // 2. We're not already loading/filtering
+        // 2. We're not already loading/filtering/retrying
         // 3. We have an active category
         // 4. We haven't exceeded max retries
         const shouldRetry = leaderboard.length === 0 &&
             !isLoadingCategory &&
             !isFiltering &&
+            !isRetrying &&
             activeCategory &&
             retryCount < MAX_RETRIES;
 
         if (shouldRetry) {
-            setIsRetrying(true);
+            // Schedule both setState and reload inside the timeout to avoid sync setState
             retryTimeoutRef.current = window.setTimeout(() => {
-                setRetryCount(prev => prev + 1);
+                setIsRetrying(true);
                 router.reload({
                     only: ['leaderboard'],
                     onFinish: () => {
-                        // Will be handled by the next effect cycle
+                        setRetryCount(prev => prev + 1);
+                        setIsRetrying(false);
                     }
                 });
             }, RETRY_DELAY_MS);
-        } else if (retryCount >= MAX_RETRIES) {
-            setIsRetrying(false);
         }
 
         return () => {
@@ -201,7 +204,7 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                 retryTimeoutRef.current = null;
             }
         };
-    }, [leaderboard.length, isLoadingCategory, isFiltering, activeCategory, retryCount]);
+    }, [leaderboard.length, isLoadingCategory, isFiltering, isRetrying, activeCategory, retryCount]);
 
     useEffect(() => {
         if (!isLive) return;

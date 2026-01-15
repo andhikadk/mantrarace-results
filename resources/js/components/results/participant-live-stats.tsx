@@ -4,6 +4,7 @@ import { type Participant, type CheckpointSplit } from './participant-card';
 interface Props {
     participant: Participant;
     isFinished: boolean;
+    displayStatus: string;
     lastReachedCheckpoint: CheckpointSplit | null;
     currentDistance: number;
     totalDistance: number;
@@ -16,6 +17,7 @@ interface Props {
 export function ParticipantLiveStats({
     participant,
     isFinished,
+    displayStatus,
     lastReachedCheckpoint,
     currentDistance,
     totalDistance,
@@ -24,10 +26,11 @@ export function ParticipantLiveStats({
     totalElevationGain,
     elevationProgress
 }: Props) {
+    const isYetToStart = displayStatus === 'YET TO START';
     return (
         <div className="grid grid-cols-2 gap-3 shrink-0">
-            {/* 1. Position / Last CP (Only show if NOT finished) */}
-            {!isFinished && (
+            {/* 1. Position / Last CP (Only show if NOT finished AND NOT yet to start) */}
+            {!isFinished && !isYetToStart && (
                 <div className="col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-[#100d67] text-white p-5 shadow-sm relative overflow-hidden flex flex-col justify-center min-h-[100px]">
                     <div className="relative z-10">
                         <div className="text-[10px] font-bold uppercase text-indigo-200 mb-1 flex items-center gap-2">
