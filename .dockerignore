@@ -1,0 +1,87 @@
+# Ignore the public/storage directory
+public/storage
+
+# Ignore node_modules
+node_modules
+
+# Ignore vendor (will be installed in Docker)
+vendor
+
+# Ignore built assets (will be built in Docker)
+public/build
+public/hot
+bootstrap/ssr
+
+# Ignore temporary files
+*.tmp
+*.log
+
+# Ignore IDE specific files
+.idea/
+.vscode/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore environment files
+.env
+.env.*
+!.env.example
+
+# Ignore build artifacts
+*.out
+*.o
+*.a
+*.so
+
+# Ignore coverage reports
+coverage/
+
+# Ignore test results
+*.testresult
+*.xml
+
+# Ignore storage and cache
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+bootstrap/cache/*
+
+# Ignore Git
+.git
+.gitignore
+.gitattributes
+
+# Ignore Docker files (except Dockerfiles and entrypoints)
+docker/**
+!docker/dev/Dockerfile
+!docker/dev/Dockerfile.frontend
+!docker/dev/entrypoint.sh
+!docker/dev/entrypoint-backend.sh
+!docker/dev/entrypoint-frontend.sh
+!docker/dev/watch.php
+!docker/prod/Dockerfile
+compose.yml
+.docker
+
+# Ignore documentation
+README.md
+CLAUDE.md
+*.md
+
+# Ignore test files
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Ignore development files
+.editorconfig
+.php-cs-fixer.php
+pint.json
+
+# Ignore other unnecessary files
+*.bak
+*.swp
+*.swo
