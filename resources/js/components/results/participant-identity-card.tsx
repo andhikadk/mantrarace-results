@@ -17,7 +17,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export function ParticipantIdentityCard({ participant }: Props) {
-    const displayStatus = getDisplayStatus(participant.status, participant.finishTime);
+    const displayStatus = getDisplayStatus(participant.status);
     const flagCode = getFlagCode(participant.nation);
     const gender = normalizeGender(participant.gender);
     const GenderIcon = gender === 'Male' ? Mars : gender === 'Female' ? Venus : null;

@@ -47,7 +47,7 @@ function GenderIcon({ gender }: { gender: string }) {
 }
 
 export function ParticipantCard({ participant, onClick }: Props) {
-    const displayStatus = getDisplayStatus(participant.status, participant.finishTime);
+    const displayStatus = getDisplayStatus(participant.status);
     const flagCode = getFlagCode(participant.nation);
     const normalizedGen = normalizeGender(participant.gender)?.toUpperCase() || participant.gender?.toUpperCase() || '-';
 

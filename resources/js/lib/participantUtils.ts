@@ -116,7 +116,7 @@ export function getStatusBadge(status: string) {
     };
 }
 
-export function getDisplayStatus(status: string, finishTime: string | null): string {
+export function getDisplayStatus(status: string): string {
     const raw = (status || '').toUpperCase();
 
     // Normalize Corrupted Strings
@@ -133,8 +133,6 @@ export function getDisplayStatus(status: string, finishTime: string | null): str
     if (s === 'FINISHED') return 'FINISHED';
     if (s === 'YET TO START') return 'YET TO START';
 
-    // If we have a status string (e.g. "CP1", "Started"), allow it through for display
-    if (status) return status;
-
-    return finishTime ? 'FINISHED' : 'ON RACE';
+    // Any other status (e.g., checkpoint names like "CP1", "STARTED", etc.) means participant is on race
+    return 'ON RACE';
 }

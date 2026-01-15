@@ -38,25 +38,15 @@ interface Props {
     elevationWaypoints?: ElevationWaypoint[];
 }
 
-function StatusBadge({ status }: { status: string }) {
-    const badge = getStatusBadge(status);
-    return (
-        <span className={`inline-flex rounded-full ${badge.bgClass} px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${badge.textClass}`}>
-            {badge.label}
-        </span>
-    );
-}
-
 export function ParticipantModal({ participant, open, onClose, eventSlug, categorySlug, certificateEnabled, elevationData, elevationWaypoints }: Props) {
     const [showFullscreen, setShowFullscreen] = useState(false);
 
     if (!participant) return null;
 
-    const displayStatus = getDisplayStatus(participant.status, participant.finishTime);
+    const displayStatus = getDisplayStatus(participant.status);
     const statusBadge = getStatusBadge(displayStatus);
     const isFinished = displayStatus === 'FINISHED' || !!participant.finishTime;
     const flagCode = getFlagCode(participant.nation);
-    const hasCheckpoints = participant.checkpoints.length > 0;
 
 
     // --- LIVE STATS CALCULATION (Index Matching) ---
