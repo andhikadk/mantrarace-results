@@ -115,10 +115,10 @@ class GpxParserService
 
             // Find closest elevation point available in FULL track data
             $closestDistance = $this->findClosestDistance($lat, $lon, $fullTrackData);
-            
+
             // Only add if reasonable close (< 1km like in HTML logic)
             // But for now purely closest to mimic simple logic
-            
+
             $waypoints[] = [
                 'name' => $name,
                 'distance' => $closestDistance,

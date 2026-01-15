@@ -43,6 +43,8 @@ interface Props {
 const ITEMS_PER_PAGE = 10;
 const DEFAULT_GENDER_FILTER = 'all';
 const FILTER_LOADING_DELAY = 200;
+const RETRY_DELAY_MS = 1500;
+const MAX_RETRIES = 3;
 
 export default function EventShow({ event, categories, activeCategory, leaderboard, elevationData, elevationWaypoints, isLive }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -51,7 +53,11 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
     const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
     const [isFiltering, setIsFiltering] = useState(false);
     const [isLoadingCategory, setIsLoadingCategory] = useState(false);
+    const [isRetrying, setIsRetrying] = useState(false);
+    const [retryCount, setRetryCount] = useState(0);
     const filterTimeoutRef = useRef<number | null>(null);
+    const retryTimeoutRef = useRef<number | null>(null);
+    const hasReceivedData = useRef(leaderboard.length > 0);
 
     const filteredLeaderboard = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
@@ -90,9 +96,15 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
         setSelectedParticipant(null);
         setIsFiltering(false);
         setIsLoadingCategory(false);
+        setIsRetrying(false);
+        setRetryCount(0);
         if (filterTimeoutRef.current) {
             window.clearTimeout(filterTimeoutRef.current);
             filterTimeoutRef.current = null;
+        }
+        if (retryTimeoutRef.current) {
+            window.clearTimeout(retryTimeoutRef.current);
+            retryTimeoutRef.current = null;
         }
     }, []);
 
@@ -140,8 +152,56 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                 window.clearTimeout(filterTimeoutRef.current);
                 filterTimeoutRef.current = null;
             }
+            if (retryTimeoutRef.current) {
+                window.clearTimeout(retryTimeoutRef.current);
+                retryTimeoutRef.current = null;
+            }
         };
     }, []);
+
+    // Auto-retry when leaderboard is unexpectedly empty
+    useEffect(() => {
+        // If we have data, mark that we've received data before
+        if (leaderboard.length > 0) {
+            hasReceivedData.current = true;
+            setIsRetrying(false);
+            setRetryCount(0);
+            return;
+        }
+
+        // Only auto-retry if:
+        // 1. Leaderboard is empty
+        // 2. We're not already loading/filtering
+        // 3. We have an active category
+        // 4. We haven't exceeded max retries
+        const shouldRetry = leaderboard.length === 0 &&
+            !isLoadingCategory &&
+            !isFiltering &&
+            activeCategory &&
+            retryCount < MAX_RETRIES;
+
+        if (shouldRetry) {
+            setIsRetrying(true);
+            retryTimeoutRef.current = window.setTimeout(() => {
+                setRetryCount(prev => prev + 1);
+                router.reload({
+                    only: ['leaderboard'],
+                    onFinish: () => {
+                        // Will be handled by the next effect cycle
+                    }
+                });
+            }, RETRY_DELAY_MS);
+        } else if (retryCount >= MAX_RETRIES) {
+            setIsRetrying(false);
+        }
+
+        return () => {
+            if (retryTimeoutRef.current) {
+                window.clearTimeout(retryTimeoutRef.current);
+                retryTimeoutRef.current = null;
+            }
+        };
+    }, [leaderboard.length, isLoadingCategory, isFiltering, activeCategory, retryCount]);
 
     useEffect(() => {
         if (!isLive) return;
@@ -186,18 +246,22 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                 />
 
                 <div className="mx-auto max-w-6xl px-4 py-4 relative">
-                    {(isFiltering || isLoadingCategory) && (
+                    {(isFiltering || isLoadingCategory || isRetrying) && (
                         <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#efefef]/80 dark:bg-slate-950/80">
-                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Loading results...
+                            <div className="flex flex-col items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                <span>{isRetrying ? 'Fetching results...' : 'Loading results...'}</span>
                             </div>
                         </div>
                     )}
-                    {paginatedLeaderboard.length === 0 ? (
+                    {paginatedLeaderboard.length === 0 && !isRetrying ? (
                         <div className="py-12 text-center text-slate-500 dark:text-slate-400">
-                            No results found
+                            {searchQuery || genderFilter !== 'all'
+                                ? 'No matching results found'
+                                : 'No results available'}
                         </div>
+                    ) : paginatedLeaderboard.length === 0 && isRetrying ? (
+                        <div className="py-12" />
                     ) : (
                         <>
                             <div className="space-y-3">

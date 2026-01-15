@@ -118,7 +118,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
         <>
             {/* Summary Modal */}
             <Dialog open={open && !showFullscreen} onOpenChange={(o) => !o && onClose()}>
-                <DialogContent className="w-[calc(100%-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-lg p-0 gap-0 dark:bg-slate-950 dark:border-slate-800 [&>button]:hidden">
+                <DialogContent className="w-[calc(100%-2rem)] max-w-3xl sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-lg p-0 gap-0 dark:bg-slate-950 dark:border-slate-800 [&>button]:hidden">
                     {/* Header Section */}
                     <DialogHeader className="p-5 pb-4 border-b border-slate-200 dark:border-slate-800">
                         <div className="flex items-start justify-between gap-3">
@@ -178,7 +178,7 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
                             </div>
                             <div className="col-span-2 sm:col-span-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 p-4 text-center">
                                 <div className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">
-                                    {participant.finishTime || '--:--:--'}
+                                    {displayStatus === 'FINISHED' ? (participant.finishTime || '--:--:--') : '--:--:--'}
                                 </div>
                                 <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                                     Finish Time

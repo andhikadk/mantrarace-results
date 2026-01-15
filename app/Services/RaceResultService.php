@@ -69,7 +69,7 @@ class RaceResultService
         try {
             return $lock->block($lockWaitSeconds, function () use ($cacheKey, $category, $staleTtl, $force) {
                 // If not forcing, check if we already have fresh data (handle thundering herd)
-                if (!$force) {
+                if (! $force) {
                     $payload = Cache::get($cacheKey);
                     if ($this->isValidPayload($payload)) {
                         return $payload;

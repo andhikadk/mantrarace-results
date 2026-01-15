@@ -52,7 +52,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
     const normalizedGen = normalizeGender(participant.gender)?.toUpperCase() || participant.gender?.toUpperCase() || '-';
 
     return (
-        <div className="w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-none md:rounded-none md:border-x-0 md:border-t-0 md:px-4 hover:bg-[#efefef] dark:hover:bg-slate-800">
+        <div className="w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-none md:rounded-none md:border-x-0 md:border-t-0 md:px-4 hover:bg-slate-100 dark:hover:bg-slate-800">
             <button
                 type="button"
                 onClick={onClick}
@@ -126,7 +126,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
                                         TIME
                                     </div>
                                     <div className="font-mono text-base font-bold text-slate-900 dark:text-slate-100">
-                                        {participant.finishTime || '--:--:--'}
+                                        {displayStatus === 'FINISHED' ? (participant.finishTime || '--:--:--') : '--:--:--'}
                                     </div>
                                 </div>
 
@@ -199,11 +199,11 @@ export function ParticipantCard({ participant, onClick }: Props) {
                     <div className="w-28 text-right">
                         <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">FINISH TIME</div>
                         <div className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
-                            {participant.finishTime || '--:--:--'}
+                            {displayStatus === 'FINISHED' ? (participant.finishTime || '--:--:--') : '--:--:--'}
                         </div>
                     </div>
 
-                    <div className="w-20 text-right">
+                    <div className="w-32 text-right">
                         {(() => {
                             const isFinished = displayStatus === 'FINISHED';
                             const lastCheckpoint = [...participant.checkpoints].reverse().find(cp => cp.time);
