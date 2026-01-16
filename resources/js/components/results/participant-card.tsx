@@ -23,6 +23,8 @@ export interface CheckpointSplit {
     segment: string | null;
     overallRank: number | null;
     genderRank: number | null;
+    distance: number | null;
+    elevationGain: number | null;
 }
 
 interface Props {

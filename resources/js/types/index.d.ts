@@ -81,6 +81,8 @@ export interface Checkpoint {
     segment_field: string | null;
     overall_rank_field: string | null;
     gender_rank_field: string | null;
+    distance: number | null;
+    elevation_gain: number | null;
     created_at: string;
     updated_at: string;
 }

@@ -10,6 +10,8 @@ readonly class CheckpointData
         public ?string $segment,
         public ?int $overallRank,
         public ?int $genderRank,
+        public ?float $distance = null,
+        public ?float $elevationGain = null,
     ) {}
 
     public function toArray(): array
@@ -20,6 +22,8 @@ readonly class CheckpointData
             'segment' => $this->segment,
             'overallRank' => $this->overallRank,
             'genderRank' => $this->genderRank,
+            'distance' => $this->distance,
+            'elevationGain' => $this->elevationGain,
         ];
     }
 }

@@ -40,11 +40,6 @@ export function ParticipantLiveStats({
                         <div className="text-2xl font-bold uppercase tracking-tight leading-tight">
                             {lastReachedCheckpoint ? lastReachedCheckpoint.name : 'Start Line'}
                         </div>
-                        {lastReachedCheckpoint?.time && (
-                            <div className="mt-1 font-mono text-base text-indigo-300">
-                                Checked in at {lastReachedCheckpoint.time}
-                            </div>
-                        )}
                     </div>
                     {/* Decorative bg circle */}
                     <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>

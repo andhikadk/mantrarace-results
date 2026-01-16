@@ -8,7 +8,7 @@ import { CertificateFieldEditor, type FieldsConfig } from '@/components/admin/ce
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Category, type Checkpoint } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { FileUp, Plus, Trash2 } from 'lucide-react';
+import { FileUp, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface Props {
@@ -45,6 +45,7 @@ export default function CategoryEdit({ category }: Props) {
     });
 
     const [showNewCheckpoint, setShowNewCheckpoint] = useState(false);
+    const [editingCheckpoint, setEditingCheckpoint] = useState<Checkpoint | null>(null);
     const checkpointForm = useForm({
         order_index: (category.checkpoints?.length ?? 0) + 1,
         name: '',
@@ -52,6 +53,8 @@ export default function CategoryEdit({ category }: Props) {
         segment_field: '',
         overall_rank_field: '',
         gender_rank_field: '',
+        distance: '' as string | number,
+        elevation_gain: '' as string | number,
     });
 
     const handleCategorySubmit = (e: React.FormEvent) => {
@@ -94,6 +97,39 @@ export default function CategoryEdit({ category }: Props) {
                 checkpointForm.setData('order_index', (category.checkpoints?.length ?? 0) + 2);
             },
         });
+    };
+
+    const handleEditCheckpoint = (cp: Checkpoint) => {
+        setEditingCheckpoint(cp);
+        setShowNewCheckpoint(false);
+        checkpointForm.setData({
+            order_index: cp.order_index,
+            name: cp.name,
+            time_field: cp.time_field,
+            segment_field: cp.segment_field || '',
+            overall_rank_field: cp.overall_rank_field || '',
+            gender_rank_field: cp.gender_rank_field || '',
+            distance: cp.distance ?? '',
+            elevation_gain: cp.elevation_gain ?? '',
+        });
+    };
+
+    const handleUpdateCheckpoint = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingCheckpoint) return;
+        checkpointForm.put(`/admin/checkpoints/${editingCheckpoint.id}`, {
+            onSuccess: () => {
+                setEditingCheckpoint(null);
+                checkpointForm.reset();
+                checkpointForm.setData('order_index', (category.checkpoints?.length ?? 0) + 1);
+            },
+        });
+    };
+
+    const handleCancelEdit = () => {
+        setEditingCheckpoint(null);
+        checkpointForm.reset();
+        checkpointForm.setData('order_index', (category.checkpoints?.length ?? 0) + 1);
     };
 
     const handleDeleteCheckpoint = (checkpoint: Checkpoint) => {
@@ -175,33 +211,134 @@ export default function CategoryEdit({ category }: Props) {
                         )}
 
                         {category.checkpoints?.map((cp) => (
-                            <div
-                                key={cp.id}
-                                className="flex items-start gap-4 rounded-lg border p-4"
-                            >
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
-                                    {cp.order_index}
-                                </div>
-                                <div className="flex-1 space-y-1">
-                                    <div className="font-medium">{cp.name}</div>
-                                    <div className="grid gap-1 text-sm text-muted-foreground md:grid-cols-2">
-                                        <div>Time: {cp.time_field}</div>
-                                        {cp.segment_field && <div>Segment: {cp.segment_field}</div>}
-                                        {cp.overall_rank_field && (
-                                            <div>Rank: {cp.overall_rank_field}</div>
-                                        )}
-                                        {cp.gender_rank_field && (
-                                            <div>Gender Rank: {cp.gender_rank_field}</div>
-                                        )}
+                            <div key={cp.id}>
+                                {editingCheckpoint?.id === cp.id ? (
+                                    /* Inline Edit Form */
+                                    <form onSubmit={handleUpdateCheckpoint} className="space-y-4 rounded-lg border border-primary/50 bg-muted/30 p-4">
+                                        <div className="text-sm font-medium text-primary mb-2">Editing: {cp.name}</div>
+                                        <div className="grid gap-4 md:grid-cols-3">
+                                            <div className="space-y-2">
+                                                <Label>Order #</Label>
+                                                <Input
+                                                    type="number"
+                                                    min="1"
+                                                    value={checkpointForm.data.order_index}
+                                                    onChange={(e) =>
+                                                        checkpointForm.setData('order_index', parseInt(e.target.value) || 1)
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <Label>Name *</Label>
+                                                <Input
+                                                    value={checkpointForm.data.name}
+                                                    onChange={(e) => checkpointForm.setData('name', e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid gap-4 md:grid-cols-2">
+                                            <div className="space-y-2">
+                                                <Label>Time Field *</Label>
+                                                <Input
+                                                    value={checkpointForm.data.time_field}
+                                                    onChange={(e) => checkpointForm.setData('time_field', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Segment Field</Label>
+                                                <Input
+                                                    value={checkpointForm.data.segment_field}
+                                                    onChange={(e) => checkpointForm.setData('segment_field', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Overall Rank Field</Label>
+                                                <Input
+                                                    value={checkpointForm.data.overall_rank_field}
+                                                    onChange={(e) => checkpointForm.setData('overall_rank_field', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Gender Rank Field</Label>
+                                                <Input
+                                                    value={checkpointForm.data.gender_rank_field}
+                                                    onChange={(e) => checkpointForm.setData('gender_rank_field', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Distance (km)</Label>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={checkpointForm.data.distance}
+                                                    onChange={(e) =>
+                                                        checkpointForm.setData('distance', e.target.value === '' ? '' : parseFloat(e.target.value))
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Elevation Gain (m)</Label>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={checkpointForm.data.elevation_gain}
+                                                    onChange={(e) =>
+                                                        checkpointForm.setData('elevation_gain', e.target.value === '' ? '' : parseFloat(e.target.value))
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button type="submit" disabled={checkpointForm.processing}>
+                                                {checkpointForm.processing ? 'Saving...' : 'Save Changes'}
+                                            </Button>
+                                            <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                                                Cancel
+                                            </Button>
+                                        </div>
+                                    </form>
+                                ) : (
+                                    /* Display Card */
+                                    <div className="flex items-start gap-4 rounded-lg border p-4">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+                                            {cp.order_index}
+                                        </div>
+                                        <div className="flex-1 space-y-1">
+                                            <div className="font-medium">{cp.name}</div>
+                                            <div className="grid gap-1 text-sm text-muted-foreground md:grid-cols-2">
+                                                <div>Time: {cp.time_field}</div>
+                                                {cp.segment_field && <div>Segment: {cp.segment_field}</div>}
+                                                {cp.overall_rank_field && <div>Rank: {cp.overall_rank_field}</div>}
+                                                {cp.gender_rank_field && <div>Gender Rank: {cp.gender_rank_field}</div>}
+                                                {(cp.distance !== null || cp.elevation_gain !== null) && (
+                                                    <div className="col-span-2 text-xs font-medium text-primary">
+                                                        {cp.distance !== null && `${cp.distance} km`}
+                                                        {cp.distance !== null && cp.elevation_gain !== null && ' • '}
+                                                        {cp.elevation_gain !== null && `${cp.elevation_gain} m gain`}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-1">
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                onClick={() => handleEditCheckpoint(cp)}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                onClick={() => handleDeleteCheckpoint(cp)}
+                                            >
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => handleDeleteCheckpoint(cp)}
-                                >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
+                                )}
                             </div>
                         ))}
 
@@ -280,6 +417,38 @@ export default function CategoryEdit({ category }: Props) {
                                                     )
                                                 }
                                                 placeholder="e.g. Rank C1 MF"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Distance (km)</Label>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={checkpointForm.data.distance}
+                                                onChange={(e) =>
+                                                    checkpointForm.setData(
+                                                        'distance',
+                                                        e.target.value === '' ? '' : parseFloat(e.target.value)
+                                                    )
+                                                }
+                                                placeholder="e.g. 5.5"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Elevation Gain (m)</Label>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={checkpointForm.data.elevation_gain}
+                                                onChange={(e) =>
+                                                    checkpointForm.setData(
+                                                        'elevation_gain',
+                                                        e.target.value === '' ? '' : parseFloat(e.target.value)
+                                                    )
+                                                }
+                                                placeholder="e.g. 350"
                                             />
                                         </div>
                                     </div>

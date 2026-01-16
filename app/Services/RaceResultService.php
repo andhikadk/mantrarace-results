@@ -136,6 +136,8 @@ class RaceResultService
             segment: $this->cleanTimeValue($cp->segment_field ? ($row[$cp->segment_field] ?? null) : null),
             overallRank: $this->toNullableInt($cp->overall_rank_field ? ($row[$cp->overall_rank_field] ?? null) : null),
             genderRank: $this->toNullableInt($cp->gender_rank_field ? ($row[$cp->gender_rank_field] ?? null) : null),
+            distance: $cp->distance,
+            elevationGain: $cp->elevation_gain,
         ))->all();
     }
 
@@ -366,7 +368,17 @@ class RaceResultService
                 return $lastCpIndexB <=> $lastCpIndexA;
             }
 
-            // 3. Fallback: Sort by BIB
+            // 3. Same checkpoint: Sort by rank at that checkpoint
+            if ($lastCpIndexA >= 0) {
+                $cpRankA = $a->checkpoints[$lastCpIndexA]->overallRank ?? PHP_INT_MAX;
+                $cpRankB = $b->checkpoints[$lastCpIndexB]->overallRank ?? PHP_INT_MAX;
+
+                if ($cpRankA !== $cpRankB) {
+                    return $cpRankA <=> $cpRankB;
+                }
+            }
+
+            // 4. Fallback: Sort by BIB
             // This also handles the case where race hasn't started (lastCpIndex = -1 for all)
             return strnatcmp($a->bib, $b->bib);
         })
@@ -409,6 +421,8 @@ class RaceResultService
                     segment: $cp['segment'] ?? null,
                     overallRank: $this->toNullableInt($cp['overallRank'] ?? null),
                     genderRank: $this->toNullableInt($cp['genderRank'] ?? null),
+                    distance: isset($cp['distance']) ? (float) $cp['distance'] : null,
+                    elevationGain: isset($cp['elevationGain']) ? (float) $cp['elevationGain'] : null,
                 ),
                 $payload['checkpoints'] ?? []
             ),

@@ -12,6 +12,8 @@ class Checkpoint extends Model
     {
         return [
             'order_index' => 'integer',
+            'distance' => 'float',
+            'elevation_gain' => 'float',
         ];
     }
 

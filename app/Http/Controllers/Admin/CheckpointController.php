@@ -19,6 +19,8 @@ class CheckpointController extends Controller
             'segment_field' => 'nullable|string|max:255',
             'overall_rank_field' => 'nullable|string|max:255',
             'gender_rank_field' => 'nullable|string|max:255',
+            'distance' => 'nullable|numeric|min:0',
+            'elevation_gain' => 'nullable|numeric|min:0',
         ]);
 
         // Ensure unique order_index within category
@@ -42,6 +44,8 @@ class CheckpointController extends Controller
             'segment_field' => 'nullable|string|max:255',
             'overall_rank_field' => 'nullable|string|max:255',
             'gender_rank_field' => 'nullable|string|max:255',
+            'distance' => 'nullable|numeric|min:0',
+            'elevation_gain' => 'nullable|numeric|min:0',
         ]);
 
         // Ensure unique order_index within category (excluding current)
