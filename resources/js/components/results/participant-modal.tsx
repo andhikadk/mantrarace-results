@@ -47,8 +47,8 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
     if (!participant) return null;
 
     const displayStatus = getDisplayStatus(participant.status);
-    const statusBadge = getStatusBadge(displayStatus);
-    const isFinished = displayStatus === 'FINISHED';
+    const statusBadge = getStatusBadge(participant.status);
+    const isFinished = displayStatus === 'FINISHED' || !!participant.finishTime;
     const flagCode = getFlagCode(participant.nation);
 
 

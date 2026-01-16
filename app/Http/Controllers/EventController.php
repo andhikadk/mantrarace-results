@@ -22,15 +22,17 @@ class EventController extends Controller
             ? ($categories->firstWhere('slug', $requestedCategory) ?? $categories->first())
             : $categories->first();
 
-        $leaderboard = $defaultCategory
-            ? $raceService->getLeaderboardPayload($defaultCategory)
-            : [];
+        $leaderboard = [];
 
-        $shouldRefresh = $request->boolean('refresh') || $request->header('X-Force-Refresh');
+        if ($defaultCategory) {
+            $shouldRefresh = $request->boolean('refresh') || $request->header('X-Force-Refresh');
 
-        if ($shouldRefresh && $defaultCategory) {
-            $leaderboardpayload = $raceService->refreshLeaderboardCache($defaultCategory, true);
-            $leaderboard = $leaderboardpayload['items'];
+            if ($shouldRefresh) {
+                $leaderboardPayload = $raceService->refreshLeaderboardCache($defaultCategory, true);
+                $leaderboard = $leaderboardPayload['items'] ?? [];
+            } else {
+                $leaderboard = $raceService->getLeaderboardPayload($defaultCategory);
+            }
         }
 
         $gpxData = ['elevation' => [], 'waypoints' => []];

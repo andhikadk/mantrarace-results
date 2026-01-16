@@ -103,8 +103,8 @@ class RaceResultService
     private function mapParticipant(array $row, Collection $checkpoints): ParticipantData
     {
         $status = $row['Status'] ?? '';
-        // Only trust rank if status is explicitly FINISHED
-        $isFinished = strtolower($status) === 'finished';
+        $finishTime = $this->cleanTimeValue($row['Finish Time'] ?? null);
+        $isFinished = $this->isFinishedStatus($status) || ! empty($finishTime);
 
         return new ParticipantData(
             overallRank: $isFinished ? (int) ($row['Overall Rank'] ?? 0) : 0,
@@ -114,7 +114,7 @@ class RaceResultService
             gender: $this->normalizeGender($row['GENDER'] ?? ''),
             nation: $row['Nation'] ?? '',
             club: $row['Club'] ?? '',
-            finishTime: $this->cleanTimeValue($row['Finish Time'] ?? null),
+            finishTime: $finishTime,
             netTime: $this->cleanTimeValue($row['NetTime'] ?? null),
             gap: $this->cleanTimeValue($row['Gap'] ?? null),
             status: $status,
@@ -239,6 +239,13 @@ class RaceResultService
         return (int) $value;
     }
 
+    private function isFinishedStatus(string $status): bool
+    {
+        $normalized = strtoupper(str_replace('_', ' ', trim($status)));
+
+        return $normalized === 'FINISHED' || str_starts_with($normalized, 'FIN');
+    }
+
     /**
      * @return array{fetched_at:int,items:array<int,array<string,mixed>>}|null
      */
@@ -325,10 +332,8 @@ class RaceResultService
             ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints));
 
         $mapped = $mapped->sort(function (ParticipantData $a, ParticipantData $b) {
-            $statusA = strtolower($a->status);
-            $statusB = strtolower($b->status);
-            $isFinishedA = $statusA === 'finished';
-            $isFinishedB = $statusB === 'finished';
+            $isFinishedA = $this->isFinishedStatus($a->status) || ! empty($a->finishTime);
+            $isFinishedB = $this->isFinishedStatus($b->status) || ! empty($b->finishTime);
 
             // 1. Priority: Finished Participants
             if ($isFinishedA && $isFinishedB) {

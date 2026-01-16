@@ -137,7 +137,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
                                     <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-0.5">
                                         STATUS
                                     </div>
-                                    <StatusBadge status={displayStatus} />
+                                    <StatusBadge status={participant.status} />
                                 </div>
                             </div>
                         </div>
@@ -251,7 +251,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
 
                     <div className="w-24 text-right">
                         <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">STATUS</div>
-                        <StatusBadge status={displayStatus} />
+                        <StatusBadge status={participant.status} />
                     </div>
                 </div>
             </button>

@@ -21,6 +21,8 @@ class CertificateController extends Controller
 
     public function show(Event $event, Category $category, string $bib): Response|StreamedResponse
     {
+        abort_unless($category->event_id === $event->id, 404);
+
         // Check if certificate is enabled
         $certificate = $category->certificate;
         if (! $certificate || ! $certificate->enabled) {
