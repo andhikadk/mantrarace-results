@@ -17,6 +17,8 @@ interface CategoryInfo {
     slug: string;
     certificateEnabled: boolean;
     hasGpx: boolean;
+    totalDistance: number | null;
+    totalElevationGain: number | null;
 }
 
 interface ElevationPoint {
@@ -316,6 +318,8 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                 certificateEnabled={activeCategory?.certificateEnabled}
                 elevationData={elevationData}
                 elevationWaypoints={elevationWaypoints}
+                categoryTotalDistance={categories.find(c => c.slug === activeCategory?.slug)?.totalDistance}
+                categoryTotalElevationGain={categories.find(c => c.slug === activeCategory?.slug)?.totalElevationGain}
             />
         </>
     );

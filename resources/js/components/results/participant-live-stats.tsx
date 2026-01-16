@@ -53,7 +53,7 @@ export function ParticipantLiveStats({
                     <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-2">Distance</div>
                     <div className="flex items-baseline gap-1">
                         <div className="font-mono text-3xl font-bold text-slate-900 dark:text-slate-100">
-                            {currentDistance.toFixed(1)}
+                            {currentDistance.toFixed(2)}
                         </div>
                         <span className="text-xs text-slate-500 font-bold">km</span>
                     </div>
@@ -61,7 +61,7 @@ export function ParticipantLiveStats({
                         <div className="mt-3">
                             <div className="flex justify-between text-[10px] items-center mb-1.5 text-slate-500">
                                 <span className="font-mono">{distanceProgress.toFixed(0)}%</span>
-                                <span className="font-mono">{totalDistance.toFixed(1)} km</span>
+                                <span className="font-mono">{totalDistance.toFixed(2)} km</span>
                             </div>
                             <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                 <div className="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.min(distanceProgress, 100)}%` }}></div>

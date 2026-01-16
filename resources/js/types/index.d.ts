@@ -64,6 +64,8 @@ export interface Category {
     name: string;
     slug: string;
     endpoint_url: string;
+    total_distance: number | null;
+    total_elevation_gain: number | null;
     created_at: string;
     updated_at: string;
     event?: Event;

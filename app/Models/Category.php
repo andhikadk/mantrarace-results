@@ -8,6 +8,14 @@ class Category extends Model
 {
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'total_distance' => 'float',
+            'total_elevation_gain' => 'float',
+        ];
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

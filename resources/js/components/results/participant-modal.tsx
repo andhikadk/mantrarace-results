@@ -36,9 +36,11 @@ interface Props {
     certificateEnabled?: boolean;
     elevationData?: ElevationPoint[];
     elevationWaypoints?: ElevationWaypoint[];
+    categoryTotalDistance?: number | null;
+    categoryTotalElevationGain?: number | null;
 }
 
-export function ParticipantModal({ participant, open, onClose, eventSlug, categorySlug, certificateEnabled, elevationData, elevationWaypoints }: Props) {
+export function ParticipantModal({ participant, open, onClose, eventSlug, categorySlug, certificateEnabled, elevationData, elevationWaypoints, categoryTotalDistance, categoryTotalElevationGain }: Props) {
     const [showFullscreen, setShowFullscreen] = useState(false);
 
     if (!participant) return null;
@@ -86,35 +88,47 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
         }
     }
 
-    // 3. Calculate Total Stats from GPX or last checkpoint
+    // 3. Calculate Total Stats - Priority: Category settings > last checkpoint > GPX
     let totalElevationGain = 0;
     let totalDistance = 0;
 
-    // Get total from last checkpoint if it has data
-    const lastCheckpoint = participant.checkpoints[participant.checkpoints.length - 1];
-    if (lastCheckpoint?.distance !== null && lastCheckpoint?.distance !== undefined) {
-        totalDistance = lastCheckpoint.distance;
-    } else if (elevationData && elevationData.length > 0) {
-        totalDistance = elevationData[elevationData.length - 1].distance;
+    // Priority 1: Use category totals if available
+    if (categoryTotalDistance !== null && categoryTotalDistance !== undefined && categoryTotalDistance > 0) {
+        totalDistance = categoryTotalDistance;
+    } else {
+        // Priority 2: Get from last checkpoint if it has data
+        const lastCheckpoint = participant.checkpoints[participant.checkpoints.length - 1];
+        if (lastCheckpoint?.distance !== null && lastCheckpoint?.distance !== undefined) {
+            totalDistance = lastCheckpoint.distance;
+        } else if (elevationData && elevationData.length > 0) {
+            // Priority 3: Fallback to GPX
+            totalDistance = elevationData[elevationData.length - 1].distance;
+        }
     }
 
-    if (lastCheckpoint?.elevationGain !== null && lastCheckpoint?.elevationGain !== undefined) {
-        totalElevationGain = lastCheckpoint.elevationGain;
-    } else if (elevationData && elevationData.length > 0) {
-        // Calculate total elevation gain from GPX
-        for (let i = 1; i < elevationData.length; i++) {
-            const diff = elevationData[i].elevation - elevationData[i - 1].elevation;
-            if (diff > 0) totalElevationGain += diff;
-        }
-        // Also calculate current elevation gain from GPX if not set by checkpoint
-        if (currentElevationGain === 0 && currentDistance > 0) {
+    if (categoryTotalElevationGain !== null && categoryTotalElevationGain !== undefined && categoryTotalElevationGain > 0) {
+        totalElevationGain = categoryTotalElevationGain;
+    } else {
+        const lastCheckpoint = participant.checkpoints[participant.checkpoints.length - 1];
+        if (lastCheckpoint?.elevationGain !== null && lastCheckpoint?.elevationGain !== undefined) {
+            totalElevationGain = lastCheckpoint.elevationGain;
+        } else if (elevationData && elevationData.length > 0) {
+            // Calculate total elevation gain from GPX
             for (let i = 1; i < elevationData.length; i++) {
-                const point = elevationData[i];
-                const prevPoint = elevationData[i - 1];
-                const diff = point.elevation - prevPoint.elevation;
-                if (diff > 0 && point.distance <= currentDistance) {
-                    currentElevationGain += diff;
-                }
+                const diff = elevationData[i].elevation - elevationData[i - 1].elevation;
+                if (diff > 0) totalElevationGain += diff;
+            }
+        }
+    }
+
+    // Calculate current elevation gain from GPX if not set by checkpoint
+    if (currentElevationGain === 0 && currentDistance > 0 && elevationData && elevationData.length > 0) {
+        for (let i = 1; i < elevationData.length; i++) {
+            const point = elevationData[i];
+            const prevPoint = elevationData[i - 1];
+            const diff = point.elevation - prevPoint.elevation;
+            if (diff > 0 && point.distance <= currentDistance) {
+                currentElevationGain += diff;
             }
         }
     }

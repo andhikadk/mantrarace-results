@@ -49,6 +49,8 @@ class EventController extends Controller
                 'slug' => $cat->slug,
                 'certificateEnabled' => $cat->certificate?->enabled ?? false,
                 'hasGpx' => (bool) $cat->gpx_path,
+                'totalDistance' => $cat->total_distance,
+                'totalElevationGain' => $cat->total_elevation_gain,
             ]),
             'activeCategory' => $defaultCategory ? [
                 'slug' => $defaultCategory->slug,

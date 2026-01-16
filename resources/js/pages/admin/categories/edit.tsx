@@ -32,6 +32,8 @@ export default function CategoryEdit({ category }: Props) {
         name: category.name,
         slug: category.slug,
         endpoint_url: category.endpoint_url,
+        total_distance: category.total_distance ?? ('' as string | number),
+        total_elevation_gain: category.total_elevation_gain ?? ('' as string | number),
     });
 
     const certForm = useForm<{ template: File | null; enabled: boolean; fields_config: FieldsConfig | null | object }>({
@@ -182,6 +184,32 @@ export default function CategoryEdit({ category }: Props) {
                                     value={categoryForm.data.endpoint_url}
                                     onChange={(e) => categoryForm.setData('endpoint_url', e.target.value)}
                                 />
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="total_distance">Total Distance (km)</Label>
+                                    <Input
+                                        id="total_distance"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={categoryForm.data.total_distance}
+                                        onChange={(e) => categoryForm.setData('total_distance', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                        placeholder="e.g. 42.195"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="total_elevation_gain">Total Elevation Gain (m)</Label>
+                                    <Input
+                                        id="total_elevation_gain"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={categoryForm.data.total_elevation_gain}
+                                        onChange={(e) => categoryForm.setData('total_elevation_gain', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                        placeholder="e.g. 1500"
+                                    />
+                                </div>
                             </div>
                             <Button type="submit" disabled={categoryForm.processing}>
                                 {categoryForm.processing ? 'Saving...' : 'Save Category'}
