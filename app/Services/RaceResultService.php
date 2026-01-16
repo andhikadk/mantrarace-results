@@ -116,7 +116,7 @@ class RaceResultService
             club: $row['Club'] ?? '',
             finishTime: $this->cleanTimeValue($row['Finish Time'] ?? null),
             netTime: $this->cleanTimeValue($row['NetTime'] ?? null),
-            gap: $row['Gap'] ?? null,
+            gap: $this->cleanTimeValue($row['Gap'] ?? null),
             status: $status,
             checkpoints: $this->mapCheckpoints($row, $checkpoints),
         );
@@ -204,11 +204,17 @@ class RaceResultService
     }
 
     /**
-     * Clean time value (handle corrupted data with underscores)
+     * Clean time value (handle corrupted data with underscores and placeholder templates)
      */
     private function cleanTimeValue(?string $value): ?string
     {
         if ($value === null || $value === '') {
+            return null;
+        }
+
+        // Detect placeholder/template format like "[4|HH:mm:ss]", "[0|HH:mm:ss]"
+        // These indicate the checkpoint hasn't been reached yet
+        if (preg_match('/^\[\d+\|[^\]]+\]$/', $value)) {
             return null;
         }
 

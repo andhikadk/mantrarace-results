@@ -211,7 +211,7 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
 
         const interval = setInterval(() => {
             router.reload({ only: ['leaderboard'] });
-        }, 30000);
+        }, 15000);
 
         return () => clearInterval(interval);
     }, [isLive]);

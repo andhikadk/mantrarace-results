@@ -49,8 +49,8 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
     const flagCode = getFlagCode(participant.nation);
 
 
-    // --- LIVE STATS CALCULATION (Index Matching) ---
-    // 1. Find the last checkpoint index with a time
+    // --- LIVE STATS CALCULATION (Name Matching) ---
+    // 1. Find the last checkpoint with a time (means participant reached it)
     let lastReachedCheckpointIndex = -1;
     participant.checkpoints.forEach((cp, idx) => {
         if (cp.time) lastReachedCheckpointIndex = idx;
@@ -60,13 +60,20 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
         ? participant.checkpoints[lastReachedCheckpointIndex]
         : null;
 
-    // 2. Get Distance from corresponding GPX Waypoint (Index Match)
+    // 2. Get Distance from corresponding GPX Waypoint (Name Match)
     let currentDistance = 0;
     if (elevationWaypoints && elevationWaypoints.length > 0) {
-        if (lastReachedCheckpointIndex >= 0 && lastReachedCheckpointIndex < elevationWaypoints.length) {
-            currentDistance = elevationWaypoints[lastReachedCheckpointIndex].distance;
-        } else if (isFinished && elevationWaypoints.length > 0) {
-            // If finished but index out of bounds, assume full distance from last waypoint
+        if (lastReachedCheckpoint) {
+            // Match by name (case-insensitive)
+            const matchedWaypoint = elevationWaypoints.find(
+                wp => wp.name.toLowerCase() === lastReachedCheckpoint.name.toLowerCase()
+            );
+            if (matchedWaypoint) {
+                currentDistance = matchedWaypoint.distance;
+            }
+        }
+        // If finished, use full distance from last waypoint
+        if (isFinished) {
             currentDistance = elevationWaypoints[elevationWaypoints.length - 1].distance;
         }
     }

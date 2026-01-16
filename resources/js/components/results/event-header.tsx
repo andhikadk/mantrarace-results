@@ -15,7 +15,7 @@ export function EventHeader({ event, isLive }: Props) {
             <div className="mx-auto max-w-6xl px-4">
                 <div className="flex items-start justify-between">
                     <div className="flex flex-col gap-1">
-                        {!isLive && (
+                        {isLive && (
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="relative flex h-2 w-2">
                                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#f00102]/40 dark:bg-red-400/40 opacity-75"></span>
