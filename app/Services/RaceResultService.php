@@ -104,7 +104,7 @@ class RaceResultService
     {
         $status = $row['Status'] ?? '';
         $finishTime = $this->cleanTimeValue($row['Finish Time'] ?? null);
-        $isFinished = $this->isFinishedStatus($status) || ! empty($finishTime);
+        $isFinished = $this->isFinishedStatus($status);
 
         return new ParticipantData(
             overallRank: $isFinished ? (int) ($row['Overall Rank'] ?? 0) : 0,
@@ -341,8 +341,8 @@ class RaceResultService
             ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints));
 
         $mapped = $mapped->sort(function (ParticipantData $a, ParticipantData $b) {
-            $isFinishedA = $this->isFinishedStatus($a->status) || ! empty($a->finishTime);
-            $isFinishedB = $this->isFinishedStatus($b->status) || ! empty($b->finishTime);
+            $isFinishedA = $this->isFinishedStatus($a->status);
+            $isFinishedB = $this->isFinishedStatus($b->status);
 
             // 1. Priority: Finished Participants
             if ($isFinishedA && $isFinishedB) {
@@ -382,13 +382,24 @@ class RaceResultService
                 return $lastCpIndexB <=> $lastCpIndexA;
             }
 
-            // 3. Same checkpoint: Sort by rank at that checkpoint
+            // 3. Same checkpoint: Sort by time at that checkpoint (faster = higher)
             if ($lastCpIndexA >= 0) {
-                $cpRankA = $a->checkpoints[$lastCpIndexA]->overallRank ?? PHP_INT_MAX;
-                $cpRankB = $b->checkpoints[$lastCpIndexB]->overallRank ?? PHP_INT_MAX;
+                $cpTimeA = $a->checkpoints[$lastCpIndexA]->time ?? null;
+                $cpTimeB = $b->checkpoints[$lastCpIndexB]->time ?? null;
 
-                if ($cpRankA !== $cpRankB) {
-                    return $cpRankA <=> $cpRankB;
+                // Both have time - compare them
+                if ($cpTimeA !== null && $cpTimeB !== null) {
+                    $cmp = strcmp($cpTimeA, $cpTimeB);
+                    if ($cmp !== 0) {
+                        return $cmp; // Earlier time comes first
+                    }
+                }
+                // One has time, other doesn't - the one with time comes first
+                if ($cpTimeA !== null && $cpTimeB === null) {
+                    return -1;
+                }
+                if ($cpTimeA === null && $cpTimeB !== null) {
+                    return 1;
                 }
             }
 
