@@ -384,8 +384,12 @@ class RaceResultService
 
             // 3. Same checkpoint: Sort by rank at that checkpoint
             if ($lastCpIndexA >= 0) {
-                $cpRankA = $a->checkpoints[$lastCpIndexA]->overallRank ?? PHP_INT_MAX;
-                $cpRankB = $b->checkpoints[$lastCpIndexB]->overallRank ?? PHP_INT_MAX;
+                $rawRankA = $a->checkpoints[$lastCpIndexA]->overallRank;
+                $rawRankB = $b->checkpoints[$lastCpIndexB]->overallRank;
+
+                // Treat null or negative ranks as invalid (should go to bottom)
+                $cpRankA = ($rawRankA !== null && $rawRankA > 0) ? $rawRankA : PHP_INT_MAX;
+                $cpRankB = ($rawRankB !== null && $rawRankB > 0) ? $rawRankB : PHP_INT_MAX;
 
                 if ($cpRankA !== $cpRankB) {
                     return $cpRankA <=> $cpRankB;
