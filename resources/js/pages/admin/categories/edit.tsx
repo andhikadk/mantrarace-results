@@ -379,6 +379,22 @@ export default function CategoryEdit({ category }: Props) {
                                                                 onChange={(e) => checkpointForm.setData('elevation_gain', e.target.value === '' ? '' : parseFloat(e.target.value))}
                                                             />
                                                         </div>
+                                                        <div className="space-y-2">
+                                                            <Label>Overall Rank Field</Label>
+                                                            <Input
+                                                                value={checkpointForm.data.overall_rank_field}
+                                                                onChange={(e) => checkpointForm.setData('overall_rank_field', e.target.value)}
+                                                                placeholder="e.g. Rank C1"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <Label>Gender Rank Field</Label>
+                                                            <Input
+                                                                value={checkpointForm.data.gender_rank_field}
+                                                                onChange={(e) => checkpointForm.setData('gender_rank_field', e.target.value)}
+                                                                placeholder="e.g. Gender Rank C1"
+                                                            />
+                                                        </div>
                                                     </div>
                                                     <div className="flex gap-2">
                                                         <Button type="submit" disabled={checkpointForm.processing}>
@@ -474,6 +490,22 @@ export default function CategoryEdit({ category }: Props) {
                                                         value={checkpointForm.data.elevation_gain}
                                                         onChange={(e) => checkpointForm.setData('elevation_gain', e.target.value === '' ? '' : parseFloat(e.target.value))}
                                                         placeholder="e.g. 350"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Overall Rank Field</Label>
+                                                    <Input
+                                                        value={checkpointForm.data.overall_rank_field}
+                                                        onChange={(e) => checkpointForm.setData('overall_rank_field', e.target.value)}
+                                                        placeholder="e.g. Rank C1"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Gender Rank Field</Label>
+                                                    <Input
+                                                        value={checkpointForm.data.gender_rank_field}
+                                                        onChange={(e) => checkpointForm.setData('gender_rank_field', e.target.value)}
+                                                        placeholder="e.g. Gender Rank C1"
                                                     />
                                                 </div>
                                             </div>

@@ -382,24 +382,13 @@ class RaceResultService
                 return $lastCpIndexB <=> $lastCpIndexA;
             }
 
-            // 3. Same checkpoint: Sort by time at that checkpoint (faster = higher)
+            // 3. Same checkpoint: Sort by rank at that checkpoint
             if ($lastCpIndexA >= 0) {
-                $cpTimeA = $a->checkpoints[$lastCpIndexA]->time ?? null;
-                $cpTimeB = $b->checkpoints[$lastCpIndexB]->time ?? null;
+                $cpRankA = $a->checkpoints[$lastCpIndexA]->overallRank ?? PHP_INT_MAX;
+                $cpRankB = $b->checkpoints[$lastCpIndexB]->overallRank ?? PHP_INT_MAX;
 
-                // Both have time - compare them
-                if ($cpTimeA !== null && $cpTimeB !== null) {
-                    $cmp = strcmp($cpTimeA, $cpTimeB);
-                    if ($cmp !== 0) {
-                        return $cmp; // Earlier time comes first
-                    }
-                }
-                // One has time, other doesn't - the one with time comes first
-                if ($cpTimeA !== null && $cpTimeB === null) {
-                    return -1;
-                }
-                if ($cpTimeA === null && $cpTimeB !== null) {
-                    return 1;
+                if ($cpRankA !== $cpRankB) {
+                    return $cpRankA <=> $cpRankB;
                 }
             }
 
