@@ -1,5 +1,5 @@
+import { PageHeader } from '@/components/admin/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
@@ -30,18 +30,17 @@ export default function EventCreate() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Event" />
-            <div className="flex h-full flex-1 flex-col gap-4 p-4">
-                <div>
-                    <h1 className="text-2xl font-bold">Create Event</h1>
-                    <p className="text-muted-foreground">Add a new race event</p>
-                </div>
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                <PageHeader
+                    title="Create Event"
+                    description="Add a new race event"
+                />
 
-                <Card className="max-w-2xl">
-                    <CardHeader>
-                        <CardTitle>Event Details</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+                    {/* Basic Info Section */}
+                    <div className="rounded-lg border bg-card p-4 md:p-6">
+                        <h2 className="mb-4 font-medium">Basic Information</h2>
+                        <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="title">Title *</Label>
                                 <Input
@@ -56,7 +55,12 @@ export default function EventCreate() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="slug">Slug (auto-generated if empty)</Label>
+                                <Label htmlFor="slug">
+                                    Slug
+                                    <span className="ml-1 text-xs text-muted-foreground">
+                                        (auto-generated if empty)
+                                    </span>
+                                </Label>
                                 <Input
                                     id="slug"
                                     value={data.slug}
@@ -80,8 +84,14 @@ export default function EventCreate() {
                                     <p className="text-sm text-destructive">{errors.location}</p>
                                 )}
                             </div>
+                        </div>
+                    </div>
 
-                            <div className="grid gap-4 md:grid-cols-2">
+                    {/* Date Section */}
+                    <div className="rounded-lg border bg-card p-4 md:p-6">
+                        <h2 className="mb-4 font-medium">Schedule</h2>
+                        <div className="space-y-4">
+                            <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="start_date">Start Date *</Label>
                                     <Input
@@ -112,7 +122,10 @@ export default function EventCreate() {
 
                             <div className="space-y-2">
                                 <Label htmlFor="certificate_availability_date">
-                                    Certificate Availability Date (Optional)
+                                    Certificate Availability Date
+                                    <span className="ml-1 text-xs text-muted-foreground">
+                                        (optional)
+                                    </span>
                                 </Label>
                                 <Input
                                     id="certificate_availability_date"
@@ -131,20 +144,20 @@ export default function EventCreate() {
                                     </p>
                                 )}
                             </div>
+                        </div>
+                    </div>
 
-
-                            <div className="flex gap-2 pt-4">
-                                <Button type="submit" disabled={processing}>
-                                    {processing ? 'Creating...' : 'Create Event'}
-                                </Button>
-                                <Button variant="outline" asChild>
-                                    <Link href="/admin/events">Cancel</Link>
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                        <Button type="submit" disabled={processing}>
+                            {processing ? 'Creating...' : 'Create Event'}
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <Link href="/admin/events">Cancel</Link>
+                        </Button>
+                    </div>
+                </form>
             </div>
-        </AppLayout >
+        </AppLayout>
     );
 }

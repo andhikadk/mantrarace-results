@@ -1,5 +1,5 @@
+import { PageHeader } from '@/components/admin/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
@@ -32,18 +32,16 @@ export default function CategoryCreate({ event }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Add Category - ${event.title}`} />
-            <div className="flex h-full flex-1 flex-col gap-4 p-4">
-                <div>
-                    <h1 className="text-2xl font-bold">Add Category</h1>
-                    <p className="text-muted-foreground">Add a new category to {event.title}</p>
-                </div>
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                <PageHeader
+                    title="Add Category"
+                    description={`Add a new category to ${event.title}`}
+                />
 
-                <Card className="max-w-2xl">
-                    <CardHeader>
-                        <CardTitle>Category Details</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+                    <div className="rounded-lg border bg-card p-4 md:p-6">
+                        <h2 className="mb-4 font-medium">Category Details</h2>
+                        <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="name">Name *</Label>
                                 <Input
@@ -58,7 +56,12 @@ export default function CategoryCreate({ event }: Props) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="slug">Slug (auto-generated if empty)</Label>
+                                <Label htmlFor="slug">
+                                    Slug
+                                    <span className="ml-1 text-xs text-muted-foreground">
+                                        (auto-generated if empty)
+                                    </span>
+                                </Label>
                                 <Input
                                     id="slug"
                                     value={data.slug}
@@ -86,18 +89,18 @@ export default function CategoryCreate({ event }: Props) {
                                     <p className="text-sm text-destructive">{errors.endpoint_url}</p>
                                 )}
                             </div>
+                        </div>
+                    </div>
 
-                            <div className="flex gap-2 pt-4">
-                                <Button type="submit" disabled={processing}>
-                                    {processing ? 'Creating...' : 'Create Category'}
-                                </Button>
-                                <Button variant="outline" asChild>
-                                    <Link href={`/admin/events/${event.slug}`}>Cancel</Link>
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                    <div className="flex gap-2">
+                        <Button type="submit" disabled={processing}>
+                            {processing ? 'Creating...' : 'Create Category'}
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <Link href={`/admin/events/${event.slug}`}>Cancel</Link>
+                        </Button>
+                    </div>
+                </form>
             </div>
         </AppLayout>
     );

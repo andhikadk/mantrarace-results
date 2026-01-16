@@ -1,14 +1,15 @@
+import { PageHeader } from '@/components/admin/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { CertificateFieldEditor, type FieldsConfig } from '@/components/admin/certificate-field-editor';
+import { cn } from '@/lib/utils';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Category, type Checkpoint } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { FileUp, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Award, FileUp, MapPin, Pencil, Plus, Route, Settings2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface Props {
@@ -19,6 +20,15 @@ interface Props {
     };
 }
 
+type SectionId = 'details' | 'checkpoints' | 'gpx' | 'certificate';
+
+const sections: { id: SectionId; label: string; icon: typeof Settings2 }[] = [
+    { id: 'details', label: 'Details', icon: Settings2 },
+    { id: 'checkpoints', label: 'Checkpoints', icon: Route },
+    { id: 'gpx', label: 'GPX Profile', icon: MapPin },
+    { id: 'certificate', label: 'Certificate', icon: Award },
+];
+
 export default function CategoryEdit({ category }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
@@ -26,6 +36,8 @@ export default function CategoryEdit({ category }: Props) {
         { title: category.event?.title ?? 'Event', href: `/admin/events/${category.event?.slug}` },
         { title: category.name, href: `/admin/categories/${category.slug}/edit` },
     ];
+
+    const [activeSection, setActiveSection] = useState<SectionId>('details');
 
     // Category form
     const categoryForm = useForm({
@@ -143,486 +155,463 @@ export default function CategoryEdit({ category }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit ${category.name}`} />
-            <div className="flex h-full flex-1 flex-col gap-6 p-4">
-                <div>
-                    <h1 className="text-2xl font-bold">Edit Category</h1>
-                    <p className="text-muted-foreground">
-                        Configure {category.name} for {category.event?.title}
-                    </p>
+            <div className="flex h-full flex-1 flex-col p-4 md:p-6">
+                {/* Header with accent bar */}
+                <div className="mb-6 flex items-center gap-4">
+                    <div className="h-12 w-1.5 rounded-full bg-primary" />
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">{category.name}</h1>
+                        <p className="text-sm text-muted-foreground">{category.event?.title}</p>
+                    </div>
+                    <div className="ml-auto">
+                        <Button variant="outline" asChild>
+                            <Link href={`/admin/events/${category.event?.slug}`}>← Back to Event</Link>
+                        </Button>
+                    </div>
                 </div>
 
-                {/* Category Details */}
-                <Card className="max-w-3xl">
-                    <CardHeader>
-                        <CardTitle>Category Details</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleCategorySubmit} className="space-y-4">
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label htmlFor="name">Name *</Label>
-                                    <Input
-                                        id="name"
-                                        value={categoryForm.data.name}
-                                        onChange={(e) => categoryForm.setData('name', e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="slug">Slug</Label>
-                                    <Input
-                                        id="slug"
-                                        value={categoryForm.data.slug}
-                                        onChange={(e) => categoryForm.setData('slug', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="endpoint_url">API Endpoint URL *</Label>
-                                <Input
-                                    id="endpoint_url"
-                                    type="url"
-                                    value={categoryForm.data.endpoint_url}
-                                    onChange={(e) => categoryForm.setData('endpoint_url', e.target.value)}
-                                />
-                            </div>
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label htmlFor="total_distance">Total Distance (km)</Label>
-                                    <Input
-                                        id="total_distance"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        value={categoryForm.data.total_distance}
-                                        onChange={(e) => categoryForm.setData('total_distance', e.target.value === '' ? '' : parseFloat(e.target.value))}
-                                        placeholder="e.g. 42.195"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="total_elevation_gain">Total Elevation Gain (m)</Label>
-                                    <Input
-                                        id="total_elevation_gain"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        value={categoryForm.data.total_elevation_gain}
-                                        onChange={(e) => categoryForm.setData('total_elevation_gain', e.target.value === '' ? '' : parseFloat(e.target.value))}
-                                        placeholder="e.g. 1500"
-                                    />
-                                </div>
-                            </div>
-                            <Button type="submit" disabled={categoryForm.processing}>
-                                {categoryForm.processing ? 'Saving...' : 'Save Category'}
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
+                {/* Two-column layout */}
+                <div className="flex flex-1 gap-6">
+                    {/* Sidebar Navigation */}
+                    <nav className="hidden w-48 shrink-0 md:block">
+                        <div className="sticky top-4 space-y-1">
+                            {sections.map((section) => {
+                                const Icon = section.icon;
+                                const isActive = activeSection === section.id;
+                                return (
+                                    <button
+                                        key={section.id}
+                                        onClick={() => setActiveSection(section.id)}
+                                        className={cn(
+                                            'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors',
+                                            isActive
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                        )}
+                                    >
+                                        <Icon className="h-4 w-4" />
+                                        {section.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </nav>
 
-                {/* Checkpoints */}
-                <Card className="max-w-3xl">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Checkpoints</CardTitle>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setShowNewCheckpoint(true)}
-                        >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add
-                        </Button>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {category.checkpoints?.length === 0 && !showNewCheckpoint && (
-                            <p className="text-center text-muted-foreground py-8">
-                                No checkpoints configured. Add checkpoints to map API fields.
-                            </p>
-                        )}
+                    {/* Mobile Navigation */}
+                    <div className="mb-4 flex gap-2 overflow-x-auto md:hidden">
+                        {sections.map((section) => {
+                            const Icon = section.icon;
+                            const isActive = activeSection === section.id;
+                            return (
+                                <button
+                                    key={section.id}
+                                    onClick={() => setActiveSection(section.id)}
+                                    className={cn(
+                                        'flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors',
+                                        isActive
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'bg-muted text-muted-foreground'
+                                    )}
+                                >
+                                    <Icon className="h-4 w-4" />
+                                    {section.label}
+                                </button>
+                            );
+                        })}
+                    </div>
 
-                        {category.checkpoints?.map((cp) => (
-                            <div key={cp.id}>
-                                {editingCheckpoint?.id === cp.id ? (
-                                    /* Inline Edit Form */
-                                    <form onSubmit={handleUpdateCheckpoint} className="space-y-4 rounded-lg border border-primary/50 bg-muted/30 p-4">
-                                        <div className="text-sm font-medium text-primary mb-2">Editing: {cp.name}</div>
-                                        <div className="grid gap-4 md:grid-cols-3">
-                                            <div className="space-y-2">
-                                                <Label>Order #</Label>
-                                                <Input
-                                                    type="number"
-                                                    min="1"
-                                                    value={checkpointForm.data.order_index}
-                                                    onChange={(e) =>
-                                                        checkpointForm.setData('order_index', parseInt(e.target.value) || 1)
-                                                    }
-                                                />
-                                            </div>
-                                            <div className="space-y-2 md:col-span-2">
-                                                <Label>Name *</Label>
-                                                <Input
-                                                    value={checkpointForm.data.name}
-                                                    onChange={(e) => checkpointForm.setData('name', e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="grid gap-4 md:grid-cols-2">
-                                            <div className="space-y-2">
-                                                <Label>Time Field *</Label>
-                                                <Input
-                                                    value={checkpointForm.data.time_field}
-                                                    onChange={(e) => checkpointForm.setData('time_field', e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Segment Field</Label>
-                                                <Input
-                                                    value={checkpointForm.data.segment_field}
-                                                    onChange={(e) => checkpointForm.setData('segment_field', e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Overall Rank Field</Label>
-                                                <Input
-                                                    value={checkpointForm.data.overall_rank_field}
-                                                    onChange={(e) => checkpointForm.setData('overall_rank_field', e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Gender Rank Field</Label>
-                                                <Input
-                                                    value={checkpointForm.data.gender_rank_field}
-                                                    onChange={(e) => checkpointForm.setData('gender_rank_field', e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Distance (km)</Label>
-                                                <Input
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    value={checkpointForm.data.distance}
-                                                    onChange={(e) =>
-                                                        checkpointForm.setData('distance', e.target.value === '' ? '' : parseFloat(e.target.value))
-                                                    }
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Elevation Gain (m)</Label>
-                                                <Input
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    value={checkpointForm.data.elevation_gain}
-                                                    onChange={(e) =>
-                                                        checkpointForm.setData('elevation_gain', e.target.value === '' ? '' : parseFloat(e.target.value))
-                                                    }
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <Button type="submit" disabled={checkpointForm.processing}>
-                                                {checkpointForm.processing ? 'Saving...' : 'Save Changes'}
-                                            </Button>
-                                            <Button type="button" variant="outline" onClick={handleCancelEdit}>
-                                                Cancel
-                                            </Button>
-                                        </div>
-                                    </form>
-                                ) : (
-                                    /* Display Card */
-                                    <div className="flex items-start gap-4 rounded-lg border p-4">
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
-                                            {cp.order_index}
-                                        </div>
-                                        <div className="flex-1 space-y-1">
-                                            <div className="font-medium">{cp.name}</div>
-                                            <div className="grid gap-1 text-sm text-muted-foreground md:grid-cols-2">
-                                                <div>Time: {cp.time_field}</div>
-                                                {cp.segment_field && <div>Segment: {cp.segment_field}</div>}
-                                                {cp.overall_rank_field && <div>Rank: {cp.overall_rank_field}</div>}
-                                                {cp.gender_rank_field && <div>Gender Rank: {cp.gender_rank_field}</div>}
-                                                {(cp.distance !== null || cp.elevation_gain !== null) && (
-                                                    <div className="col-span-2 text-xs font-medium text-primary">
-                                                        {cp.distance !== null && `${cp.distance} km`}
-                                                        {cp.distance !== null && cp.elevation_gain !== null && ' • '}
-                                                        {cp.elevation_gain !== null && `${cp.elevation_gain} m gain`}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-1">
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                onClick={() => handleEditCheckpoint(cp)}
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                onClick={() => handleDeleteCheckpoint(cp)}
-                                            >
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-
-                        {showNewCheckpoint && (
-                            <>
+                    {/* Main Content */}
+                    <div className="flex-1 rounded-xl border bg-card p-6">
+                        {/* Details Section */}
+                        {activeSection === 'details' && (
+                            <div className="space-y-6">
+                                <div>
+                                    <h2 className="text-lg font-semibold">Category Details</h2>
+                                    <p className="text-sm text-muted-foreground">Basic information and API configuration</p>
+                                </div>
                                 <Separator />
-                                <form onSubmit={handleCheckpointSubmit} className="space-y-4">
-                                    <div className="grid gap-4 md:grid-cols-3">
+                                <form onSubmit={handleCategorySubmit} className="space-y-4">
+                                    <div className="grid gap-4 sm:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label>Order #</Label>
+                                            <Label htmlFor="name">Name *</Label>
                                             <Input
-                                                type="number"
-                                                min="1"
-                                                value={checkpointForm.data.order_index}
-                                                onChange={(e) =>
-                                                    checkpointForm.setData(
-                                                        'order_index',
-                                                        parseInt(e.target.value) || 1
-                                                    )
-                                                }
+                                                id="name"
+                                                value={categoryForm.data.name}
+                                                onChange={(e) => categoryForm.setData('name', e.target.value)}
                                             />
                                         </div>
-                                        <div className="space-y-2 md:col-span-2">
-                                            <Label>Name *</Label>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="slug">Slug</Label>
                                             <Input
-                                                value={checkpointForm.data.name}
-                                                onChange={(e) =>
-                                                    checkpointForm.setData('name', e.target.value)
-                                                }
-                                                placeholder="e.g. Seruk 1"
+                                                id="slug"
+                                                value={categoryForm.data.slug}
+                                                onChange={(e) => categoryForm.setData('slug', e.target.value)}
                                             />
                                         </div>
                                     </div>
-                                    <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="endpoint_url">API Endpoint URL *</Label>
+                                        <Input
+                                            id="endpoint_url"
+                                            type="url"
+                                            value={categoryForm.data.endpoint_url}
+                                            onChange={(e) => categoryForm.setData('endpoint_url', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="grid gap-4 sm:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label>Time Field *</Label>
+                                            <Label htmlFor="total_distance">Total Distance (km)</Label>
                                             <Input
-                                                value={checkpointForm.data.time_field}
-                                                onChange={(e) =>
-                                                    checkpointForm.setData('time_field', e.target.value)
-                                                }
-                                                placeholder="e.g. Seruk 1"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Segment Field</Label>
-                                            <Input
-                                                value={checkpointForm.data.segment_field}
-                                                onChange={(e) =>
-                                                    checkpointForm.setData('segment_field', e.target.value)
-                                                }
-                                                placeholder="e.g. Segment 1"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Overall Rank Field</Label>
-                                            <Input
-                                                value={checkpointForm.data.overall_rank_field}
-                                                onChange={(e) =>
-                                                    checkpointForm.setData(
-                                                        'overall_rank_field',
-                                                        e.target.value
-                                                    )
-                                                }
-                                                placeholder="e.g. Rank C1"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Gender Rank Field</Label>
-                                            <Input
-                                                value={checkpointForm.data.gender_rank_field}
-                                                onChange={(e) =>
-                                                    checkpointForm.setData(
-                                                        'gender_rank_field',
-                                                        e.target.value
-                                                    )
-                                                }
-                                                placeholder="e.g. Rank C1 MF"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Distance (km)</Label>
-                                            <Input
+                                                id="total_distance"
                                                 type="number"
                                                 step="0.01"
                                                 min="0"
-                                                value={checkpointForm.data.distance}
-                                                onChange={(e) =>
-                                                    checkpointForm.setData(
-                                                        'distance',
-                                                        e.target.value === '' ? '' : parseFloat(e.target.value)
-                                                    )
-                                                }
-                                                placeholder="e.g. 5.5"
+                                                value={categoryForm.data.total_distance}
+                                                onChange={(e) => categoryForm.setData('total_distance', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                                placeholder="e.g. 42.195"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>Elevation Gain (m)</Label>
+                                            <Label htmlFor="total_elevation_gain">Total Elevation Gain (m)</Label>
                                             <Input
+                                                id="total_elevation_gain"
                                                 type="number"
                                                 step="0.01"
                                                 min="0"
-                                                value={checkpointForm.data.elevation_gain}
-                                                onChange={(e) =>
-                                                    checkpointForm.setData(
-                                                        'elevation_gain',
-                                                        e.target.value === '' ? '' : parseFloat(e.target.value)
-                                                    )
-                                                }
-                                                placeholder="e.g. 350"
+                                                value={categoryForm.data.total_elevation_gain}
+                                                onChange={(e) => categoryForm.setData('total_elevation_gain', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                                placeholder="e.g. 1500"
                                             />
                                         </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <Button type="submit" disabled={checkpointForm.processing}>
-                                            Add Checkpoint
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => setShowNewCheckpoint(false)}
-                                        >
-                                            Cancel
+                                    <div className="pt-4">
+                                        <Button type="submit" disabled={categoryForm.processing}>
+                                            {categoryForm.processing ? 'Saving...' : 'Save Changes'}
                                         </Button>
                                     </div>
                                 </form>
-                            </>
+                            </div>
                         )}
-                    </CardContent>
-                </Card>
 
-                {/* GPX Settings */}
-                <Card className="max-w-3xl">
-                    <CardHeader>
-                        <CardTitle>GPX / Elevation Profile</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleGpxSubmit} className="space-y-4">
-                            {category.gpx_path ? (
-                                <div className="flex items-center gap-4 rounded-lg border p-4">
-                                    <FileUp className="h-5 w-5 text-muted-foreground" />
-                                    <div className="flex-1">
-                                        <div className="font-medium">Current GPX File</div>
-                                        <div className="text-sm text-muted-foreground truncate">
-                                            {category.gpx_path.split('/').pop()}
-                                        </div>
+                        {/* Checkpoints Section */}
+                        {activeSection === 'checkpoints' && (
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h2 className="text-lg font-semibold">Checkpoints</h2>
+                                        <p className="text-sm text-muted-foreground">
+                                            {category.checkpoints?.length ?? 0} checkpoints configured
+                                        </p>
                                     </div>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={handleDeleteGpx}
-                                    >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    <Button size="sm" onClick={() => setShowNewCheckpoint(true)}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add
                                     </Button>
                                 </div>
-                            ) : null}
+                                <Separator />
 
-                            <div className="space-y-2">
-                                <Label htmlFor="gpx_file">Upload GPX File</Label>
-                                <Input
-                                    id="gpx_file"
-                                    type="file"
-                                    accept=".gpx,.xml"
-                                    onChange={(e) =>
-                                        gpxForm.setData('gpx_file', e.target.files?.[0] ?? null)
-                                    }
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    Upload a GPX file to display elevation profile on the results page.
-                                </p>
-                            </div>
-
-                            <Button type="submit" disabled={gpxForm.processing || !gpxForm.data.gpx_file}>
-                                {gpxForm.processing ? 'Uploading...' : 'Upload GPX'}
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
-
-                <Card className="max-w-3xl">
-                    <CardHeader>
-                        <CardTitle>Certificate Settings</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleCertSubmit} className="space-y-4">
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="enabled"
-                                    checked={certForm.data.enabled}
-                                    onCheckedChange={(checked) =>
-                                        certForm.setData('enabled', checked === true)
-                                    }
-                                />
-                                <Label htmlFor="enabled">Enable certificate generation</Label>
-                            </div>
-
-                            {category.certificate?.template_path && (
-                                <div className="flex items-center gap-4 rounded-lg border p-4">
-                                    <div className="flex-1">
-                                        <div className="font-medium">Current Template</div>
-                                        <div className="text-sm text-muted-foreground">
-                                            {category.certificate.template_path}
-                                        </div>
+                                {category.checkpoints?.length === 0 && !showNewCheckpoint && (
+                                    <div className="py-12 text-center">
+                                        <Route className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
+                                        <p className="text-muted-foreground">No checkpoints configured</p>
+                                        <Button variant="outline" className="mt-4" onClick={() => setShowNewCheckpoint(true)}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Add First Checkpoint
+                                        </Button>
                                     </div>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={handleDeleteCertificate}
-                                    >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                </div>
-                            )}
+                                )}
 
-                            <div className="space-y-2">
-                                <Label htmlFor="template">Upload PDF Template</Label>
-                                <Input
-                                    id="template"
-                                    type="file"
-                                    accept=".pdf"
-                                    onChange={(e) =>
-                                        certForm.setData('template', e.target.files?.[0] ?? null)
-                                    }
-                                />
+                                <div className="space-y-3">
+                                    {category.checkpoints?.map((cp) => (
+                                        <div key={cp.id}>
+                                            {editingCheckpoint?.id === cp.id ? (
+                                                <form onSubmit={handleUpdateCheckpoint} className="space-y-4 rounded-lg border-2 border-primary/50 bg-muted/30 p-4">
+                                                    <div className="text-sm font-medium text-primary">Editing: {cp.name}</div>
+                                                    <div className="grid gap-4 sm:grid-cols-3">
+                                                        <div className="space-y-2">
+                                                            <Label>Order #</Label>
+                                                            <Input
+                                                                type="number"
+                                                                min="1"
+                                                                value={checkpointForm.data.order_index}
+                                                                onChange={(e) => checkpointForm.setData('order_index', parseInt(e.target.value) || 1)}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2 sm:col-span-2">
+                                                            <Label>Name *</Label>
+                                                            <Input
+                                                                value={checkpointForm.data.name}
+                                                                onChange={(e) => checkpointForm.setData('name', e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid gap-4 sm:grid-cols-2">
+                                                        <div className="space-y-2">
+                                                            <Label>Time Field *</Label>
+                                                            <Input
+                                                                value={checkpointForm.data.time_field}
+                                                                onChange={(e) => checkpointForm.setData('time_field', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <Label>Segment Field</Label>
+                                                            <Input
+                                                                value={checkpointForm.data.segment_field}
+                                                                onChange={(e) => checkpointForm.setData('segment_field', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <Label>Distance (km)</Label>
+                                                            <Input
+                                                                type="number"
+                                                                step="0.01"
+                                                                min="0"
+                                                                value={checkpointForm.data.distance}
+                                                                onChange={(e) => checkpointForm.setData('distance', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <Label>Elevation Gain (m)</Label>
+                                                            <Input
+                                                                type="number"
+                                                                step="0.01"
+                                                                min="0"
+                                                                value={checkpointForm.data.elevation_gain}
+                                                                onChange={(e) => checkpointForm.setData('elevation_gain', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <Button type="submit" disabled={checkpointForm.processing}>
+                                                            {checkpointForm.processing ? 'Saving...' : 'Save'}
+                                                        </Button>
+                                                        <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                                                            Cancel
+                                                        </Button>
+                                                    </div>
+                                                </form>
+                                            ) : (
+                                                <div className="group flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
+                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                                                        {cp.order_index}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-medium">{cp.name}</div>
+                                                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                                                            <span>Time: {cp.time_field}</span>
+                                                            {cp.distance !== null && <span>{cp.distance} km</span>}
+                                                            {cp.elevation_gain !== null && <span>+{cp.elevation_gain}m</span>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                                        <Button size="icon" variant="ghost" onClick={() => handleEditCheckpoint(cp)}>
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button size="icon" variant="ghost" onClick={() => handleDeleteCheckpoint(cp)}>
+                                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+
+                                    {showNewCheckpoint && (
+                                        <form onSubmit={handleCheckpointSubmit} className="space-y-4 rounded-lg border-2 border-dashed border-primary/30 bg-muted/20 p-4">
+                                            <div className="text-sm font-medium text-primary">New Checkpoint</div>
+                                            <div className="grid gap-4 sm:grid-cols-3">
+                                                <div className="space-y-2">
+                                                    <Label>Order #</Label>
+                                                    <Input
+                                                        type="number"
+                                                        min="1"
+                                                        value={checkpointForm.data.order_index}
+                                                        onChange={(e) => checkpointForm.setData('order_index', parseInt(e.target.value) || 1)}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2 sm:col-span-2">
+                                                    <Label>Name *</Label>
+                                                    <Input
+                                                        value={checkpointForm.data.name}
+                                                        onChange={(e) => checkpointForm.setData('name', e.target.value)}
+                                                        placeholder="e.g. Seruk 1"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-4 sm:grid-cols-2">
+                                                <div className="space-y-2">
+                                                    <Label>Time Field *</Label>
+                                                    <Input
+                                                        value={checkpointForm.data.time_field}
+                                                        onChange={(e) => checkpointForm.setData('time_field', e.target.value)}
+                                                        placeholder="e.g. Seruk 1"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Segment Field</Label>
+                                                    <Input
+                                                        value={checkpointForm.data.segment_field}
+                                                        onChange={(e) => checkpointForm.setData('segment_field', e.target.value)}
+                                                        placeholder="e.g. Segment 1"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Distance (km)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        value={checkpointForm.data.distance}
+                                                        onChange={(e) => checkpointForm.setData('distance', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                                        placeholder="e.g. 5.5"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Elevation Gain (m)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        value={checkpointForm.data.elevation_gain}
+                                                        onChange={(e) => checkpointForm.setData('elevation_gain', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                                        placeholder="e.g. 350"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button type="submit" disabled={checkpointForm.processing}>
+                                                    Add Checkpoint
+                                                </Button>
+                                                <Button type="button" variant="outline" onClick={() => setShowNewCheckpoint(false)}>
+                                                    Cancel
+                                                </Button>
+                                            </div>
+                                        </form>
+                                    )}
+                                </div>
                             </div>
+                        )}
 
-                            {/* Field Configuration */}
-                            {category.certificate?.template_path && (
-                                <div className="space-y-2">
-                                    <Label>Field Configuration</Label>
-                                    <CertificateFieldEditor
-                                        config={certForm.data.fields_config as never}
-                                        templatePath={category.certificate.template_path}
-                                        categorySlug={category.slug}
-                                        onChange={(config) => certForm.setData('fields_config', config)}
-                                    />
-                                    <p className="text-xs text-muted-foreground">
-                                        Configure field positions and styling for the certificate. Preview is server-side rendered for 100% accuracy.
-                                    </p>
+                        {/* GPX Section */}
+                        {activeSection === 'gpx' && (
+                            <div className="space-y-6">
+                                <div>
+                                    <h2 className="text-lg font-semibold">GPX / Elevation Profile</h2>
+                                    <p className="text-sm text-muted-foreground">Upload GPX file for elevation visualization</p>
                                 </div>
-                            )}
+                                <Separator />
+                                <form onSubmit={handleGpxSubmit} className="space-y-4">
+                                    {category.gpx_path ? (
+                                        <div className="flex items-center gap-4 rounded-lg border bg-muted/30 p-4">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                                                <FileUp className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="font-medium">Current GPX File</div>
+                                                <div className="text-sm text-muted-foreground truncate">
+                                                    {category.gpx_path.split('/').pop()}
+                                                </div>
+                                            </div>
+                                            <Button type="button" variant="ghost" size="sm" onClick={handleDeleteGpx}>
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-lg border-2 border-dashed p-8 text-center">
+                                            <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
+                                            <p className="text-muted-foreground">No GPX file uploaded</p>
+                                        </div>
+                                    )}
 
-                            <Button type="submit" disabled={certForm.processing}>
-                                {certForm.processing ? 'Uploading...' : 'Save Certificate Settings'}
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="gpx_file">Upload GPX File</Label>
+                                        <Input
+                                            id="gpx_file"
+                                            type="file"
+                                            accept=".gpx,.xml"
+                                            onChange={(e) => gpxForm.setData('gpx_file', e.target.files?.[0] ?? null)}
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            Upload a GPX file to display elevation profile on the results page.
+                                        </p>
+                                    </div>
 
-                {/* Back Button */}
-                <div>
-                    <Button variant="outline" asChild>
-                        <Link href={`/admin/events/${category.event?.slug}`}>← Back to Event</Link>
-                    </Button>
+                                    <Button type="submit" disabled={gpxForm.processing || !gpxForm.data.gpx_file}>
+                                        {gpxForm.processing ? 'Uploading...' : 'Upload GPX'}
+                                    </Button>
+                                </form>
+                            </div>
+                        )}
+
+                        {/* Certificate Section */}
+                        {activeSection === 'certificate' && (
+                            <div className="space-y-6">
+                                <div>
+                                    <h2 className="text-lg font-semibold">Certificate Settings</h2>
+                                    <p className="text-sm text-muted-foreground">Configure finisher certificate generation</p>
+                                </div>
+                                <Separator />
+                                <form onSubmit={handleCertSubmit} className="space-y-4">
+                                    <div className="flex items-center gap-3 rounded-lg border p-4">
+                                        <Checkbox
+                                            id="enabled"
+                                            checked={certForm.data.enabled}
+                                            onCheckedChange={(checked) => certForm.setData('enabled', checked === true)}
+                                        />
+                                        <Label htmlFor="enabled" className="cursor-pointer">
+                                            Enable certificate generation for this category
+                                        </Label>
+                                    </div>
+
+                                    {category.certificate?.template_path && (
+                                        <div className="flex items-center gap-4 rounded-lg border bg-muted/30 p-4">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                                                <Award className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="font-medium">Current Template</div>
+                                                <div className="text-sm text-muted-foreground">
+                                                    {category.certificate.template_path}
+                                                </div>
+                                            </div>
+                                            <Button type="button" variant="ghost" size="sm" onClick={handleDeleteCertificate}>
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="template">Upload PDF Template</Label>
+                                        <Input
+                                            id="template"
+                                            type="file"
+                                            accept=".pdf"
+                                            onChange={(e) => certForm.setData('template', e.target.files?.[0] ?? null)}
+                                        />
+                                    </div>
+
+                                    {category.certificate?.template_path && (
+                                        <div className="space-y-2">
+                                            <Label>Field Configuration</Label>
+                                            <CertificateFieldEditor
+                                                config={certForm.data.fields_config as never}
+                                                templatePath={category.certificate.template_path}
+                                                categorySlug={category.slug}
+                                                onChange={(config) => certForm.setData('fields_config', config)}
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                Configure field positions and styling for the certificate.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <Button type="submit" disabled={certForm.processing}>
+                                        {certForm.processing ? 'Saving...' : 'Save Certificate Settings'}
+                                    </Button>
+                                </form>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </AppLayout>
