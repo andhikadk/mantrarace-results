@@ -62,11 +62,10 @@ export function ParticipantTimeline({ checkpoints, lastReachedCheckpointIndex }:
                                                     <span className="text-[9px] uppercase text-slate-400">Overall Rank</span>
                                                     <span className="font-mono font-bold">{cp.overallRank || '-'}</span>
                                                 </div>
-                                                <div className="inline-flex items-center gap-1 rounded bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/30">
+                                                {/* <div className="inline-flex items-center gap-1 rounded bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/30">
                                                     <span className="text-[9px] uppercase text-indigo-400/80">Gender Rank</span>
                                                     <span className="font-mono font-bold">{cp.genderRank || '-'}</span>
-                                                </div>
-
+                                                </div> */}
                                             </div>
                                         )}
                                     </div>
