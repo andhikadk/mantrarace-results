@@ -34,13 +34,14 @@ interface Props {
     eventSlug: string;
     categorySlug: string;
     certificateEnabled?: boolean;
+    certificateAvailabilityDate?: string | null;
     elevationData?: ElevationPoint[];
     elevationWaypoints?: ElevationWaypoint[];
     categoryTotalDistance?: number | null;
     categoryTotalElevationGain?: number | null;
 }
 
-export function ParticipantModal({ participant, open, onClose, eventSlug, categorySlug, certificateEnabled, elevationData, elevationWaypoints, categoryTotalDistance, categoryTotalElevationGain }: Props) {
+export function ParticipantModal({ participant, open, onClose, eventSlug, categorySlug, certificateEnabled, certificateAvailabilityDate, elevationData, elevationWaypoints, categoryTotalDistance, categoryTotalElevationGain }: Props) {
     const [showFullscreen, setShowFullscreen] = useState(false);
 
     if (!participant) return null;
@@ -238,18 +239,19 @@ export function ParticipantModal({ participant, open, onClose, eventSlug, catego
 
                         {/* Action Buttons */}
                         <div className="grid grid-cols-2 gap-3 pt-2">
-                            {/* Detail Profile Button - Always visible */}
+                            {/* Detail Profile Button - Full width when certificate is hidden */}
                             <Button
                                 variant="outline"
-                                className={`w-full h-12 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 ${(!isFinished || !certificateEnabled) ? 'col-span-2' : ''}`}
+                                className={`w-full h-12 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 ${(!isFinished || !certificateEnabled || !certificateAvailabilityDate || new Date() < new Date(certificateAvailabilityDate)) ? 'col-span-2' : ''
+                                    }`}
                                 onClick={() => setShowFullscreen(true)}
                             >
                                 <Maximize2 className="mr-2 h-4 w-4" />
                                 Detail Profile
                             </Button>
 
-                            {/* Certificate Button */}
-                            {isFinished && certificateEnabled && (
+                            {/* Certificate Button - Hidden if availability date is null or not yet reached */}
+                            {isFinished && certificateEnabled && certificateAvailabilityDate && new Date() >= new Date(certificateAvailabilityDate) && (
                                 <Button asChild className="w-full h-12 bg-[#100d67] text-white hover:bg-[#100d67]/90 dark:bg-indigo-600 dark:hover:bg-indigo-700">
                                     <a
                                         href={`/${eventSlug}/categories/${categorySlug}/certificate/${participant.bib}`}

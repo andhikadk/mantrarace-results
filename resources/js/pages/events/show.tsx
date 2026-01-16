@@ -316,6 +316,7 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                 eventSlug={event.slug}
                 categorySlug={activeCategory?.slug ?? ''}
                 certificateEnabled={activeCategory?.certificateEnabled}
+                certificateAvailabilityDate={event.certificate_availability_date}
                 elevationData={elevationData}
                 elevationWaypoints={elevationWaypoints}
                 categoryTotalDistance={categories.find(c => c.slug === activeCategory?.slug)?.totalDistance}
