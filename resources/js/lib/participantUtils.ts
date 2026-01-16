@@ -76,6 +76,9 @@ export function getStatusBadge(status: string) {
         else if (raw.startsWith('DNS')) s = 'DNS';
     }
 
+    // Treat 'Withdrawn - DNS/DNF' as DNF
+    if (raw.includes('WITHDRAWN')) s = 'DNF';
+
     if (s === 'FINISHED') {
         return {
             label: 'FINISHED',
@@ -127,6 +130,9 @@ export function getDisplayStatus(status: string): string {
         else if (raw.startsWith('DNF')) s = 'DNF';
         else if (raw.startsWith('DNS')) s = 'DNS';
     }
+
+    // Treat 'Withdrawn - DNS/DNF' as DNF
+    if (raw.includes('WITHDRAWN')) s = 'DNF';
 
     if (s === 'DNF') return 'DNF';
     if (s === 'DNS') return 'DNS';

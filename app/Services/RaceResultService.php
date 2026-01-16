@@ -253,6 +253,17 @@ class RaceResultService
         return $normalized === 'YET TO START' || str_starts_with($normalized, 'YET');
     }
 
+    private function isDnfOrDnsStatus(string $status): bool
+    {
+        $normalized = strtoupper(str_replace('_', ' ', trim($status)));
+
+        return $normalized === 'DNF'
+            || $normalized === 'DNS'
+            || str_starts_with($normalized, 'DNF')
+            || str_starts_with($normalized, 'DNS')
+            || str_contains($normalized, 'WITHDRAWN');
+    }
+
     /**
      * @return array{fetched_at:int,items:array<int,array<string,mixed>>}|null
      */
@@ -343,6 +354,17 @@ class RaceResultService
         $mapped = $mapped->sort(function (ParticipantData $a, ParticipantData $b) {
             $isFinishedA = $this->isFinishedStatus($a->status);
             $isFinishedB = $this->isFinishedStatus($b->status);
+            $isDnfDnsA = $this->isDnfOrDnsStatus($a->status);
+            $isDnfDnsB = $this->isDnfOrDnsStatus($b->status);
+
+            // 0. DNF/DNS/Withdrawn always at the bottom
+            if ($isDnfDnsA !== $isDnfDnsB) {
+                return $isDnfDnsA ? 1 : -1;
+            }
+            // If both are DNF/DNS, sort by BIB
+            if ($isDnfDnsA && $isDnfDnsB) {
+                return strnatcmp($a->bib, $b->bib);
+            }
 
             // 1. Priority: Finished Participants
             if ($isFinishedA && $isFinishedB) {
