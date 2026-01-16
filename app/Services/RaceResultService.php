@@ -251,6 +251,7 @@ class RaceResultService
      */
     private function getCachedPayload(Category $category): ?array
     {
+        $start = microtime(true);
         $cacheKey = $this->payloadCacheKey($category);
         $payload = Cache::get($cacheKey);
 
@@ -274,6 +275,7 @@ class RaceResultService
                 Log::info('raceresult.cache', [
                     'category_id' => $category->id,
                     'status' => 'hit',
+                    'ms' => (microtime(true) - $start) * 1000,
                     'age' => $age,
                     'cache_ttl' => $cacheTtl,
                 ]);

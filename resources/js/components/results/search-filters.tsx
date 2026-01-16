@@ -49,7 +49,7 @@ export function SearchFilters({
     };
 
     return (
-        <div className="bg-[#efefef] dark:bg-slate-950 sticky top-[53px] z-10 transition-all duration-200">
+        <div className="bg-[#efefef] dark:bg-slate-950 transition-all duration-200">
             <div className="mx-auto max-w-6xl px-4 py-4">
                 <div className="flex items-center gap-3">
                     {/* Search Bar */}
