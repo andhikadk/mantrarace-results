@@ -1,4 +1,4 @@
-import { normalizeGender } from '@/lib/normalizeGender';
+// import { normalizeGender } from '@/lib/normalizeGender';
 import { type Participant, type CheckpointSplit } from './participant-card';
 
 interface Props {
@@ -12,6 +12,9 @@ interface Props {
     currentElevationGain: number;
     totalElevationGain: number;
     elevationProgress: number;
+    finishTime?: string | null;
+    netTime?: string | null;
+    gap?: string | null;
 }
 
 export function ParticipantLiveStats({
@@ -24,9 +27,22 @@ export function ParticipantLiveStats({
     distanceProgress,
     currentElevationGain,
     totalElevationGain,
-    elevationProgress
+    elevationProgress,
+    finishTime,
+    netTime,
+    gap
 }: Props) {
     const isYetToStart = displayStatus === 'YET TO START';
+
+    // Determine ranks to display
+    // If finished, use participant's final rank. If not finished, use last checkpoint's rank.
+    const hasReachedCheckpoint = lastReachedCheckpoint !== null;
+    const displayOverallRank = isFinished
+        ? participant.overallRank
+        : (lastReachedCheckpoint?.overallRank ?? 0);
+    // const displayGenderRank = isFinished
+    //     ? participant.genderRank
+    //     : (lastReachedCheckpoint?.genderRank ?? 0);
     return (
         <div className="grid grid-cols-2 gap-3 shrink-0">
             {/* 1. Position / Last CP (Only show if NOT finished AND NOT yet to start) */}
@@ -95,23 +111,62 @@ export function ParticipantLiveStats({
                 </div>
             </div>
 
-            {/* 4. Rank */}
-            <div className="col-span-2 flex gap-3">
-                <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 p-4 text-center shadow-sm">
-                    <div className="font-mono text-3xl font-bold italic text-[#f00102] dark:text-red-400">
-                        {participant.overallRank > 0 ? participant.overallRank.toString().padStart(2, '0') : '-'}
+            {/* 4. Rank - Hide if not finished and no checkpoint reached */}
+            {(isFinished || hasReachedCheckpoint) && (
+                <div className="col-span-2 flex gap-3">
+                    <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 p-4 text-center shadow-sm">
+                        <div className="font-mono text-3xl font-bold italic text-[#f00102] dark:text-red-400">
+                            {displayOverallRank > 0 ? displayOverallRank.toString().padStart(2, '0') : '-'}
+                        </div>
+                        <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                            {isFinished ? 'Overall Rank' : `Rank @ ${lastReachedCheckpoint?.name || 'CP'}`}
+                        </div>
                     </div>
-                    <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">Overall Rank</div>
+                    {/* Gender Rank - Temporarily hidden
+                    <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 p-4 text-center shadow-sm">
+                        <div className="font-mono text-3xl font-bold italic text-[#100d67] dark:text-indigo-400">
+                            {displayGenderRank > 0 ? displayGenderRank.toString().padStart(2, '0') : '-'}
+                        </div>
+                        <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                            {normalizeGender(participant.gender)?.toUpperCase() || 'Gender'} Rank
+                        </div>
+                    </div>
+                    */}
                 </div>
-                <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-linear-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 p-4 text-center shadow-sm">
-                    <div className="font-mono text-3xl font-bold italic text-[#100d67] dark:text-indigo-400">
-                        {participant.genderRank > 0 ? participant.genderRank.toString().padStart(2, '0') : '-'}
-                    </div>
-                    <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                        {normalizeGender(participant.gender)?.toUpperCase() || 'Gender'} Rank
+            )}
+
+            {/* 5. Time Stats - Only show if finished */}
+            {isFinished && (finishTime || netTime || gap) && (
+                <div className="col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+                    <div className="space-y-3">
+                        {/* Finish Time */}
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Finish Time</span>
+                            <span className="font-mono text-lg font-bold text-slate-900 dark:text-slate-100">
+                                {isFinished && finishTime ? finishTime : '--:--:--'}
+                            </span>
+                        </div>
+                        {/* Net Time */}
+                        {netTime && (
+                            <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+                                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Net Time</span>
+                                <span className="font-mono text-lg font-bold text-slate-900 dark:text-slate-100">
+                                    {netTime}
+                                </span>
+                            </div>
+                        )}
+                        {/* Gap */}
+                        {gap && (
+                            <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+                                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Gap</span>
+                                <span className="font-mono text-lg font-bold text-slate-600 dark:text-slate-300">
+                                    {gap}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
