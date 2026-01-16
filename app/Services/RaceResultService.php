@@ -246,6 +246,13 @@ class RaceResultService
         return $normalized === 'FINISHED' || str_starts_with($normalized, 'FIN');
     }
 
+    private function isYetToStartStatus(string $status): bool
+    {
+        $normalized = strtoupper(str_replace('_', ' ', trim($status)));
+
+        return $normalized === 'YET TO START' || str_starts_with($normalized, 'YET');
+    }
+
     /**
      * @return array{fetched_at:int,items:array<int,array<string,mixed>>}|null
      */
@@ -385,7 +392,17 @@ class RaceResultService
                 }
             }
 
-            // 4. Fallback: Sort by BIB
+            // 4. Priority: Started vs Yet To Start
+            // If both have no checkpoint data, Started should come before Yet To Start
+            $isYetToStartA = $this->isYetToStartStatus($a->status);
+            $isYetToStartB = $this->isYetToStartStatus($b->status);
+
+            if ($isYetToStartA !== $isYetToStartB) {
+                // Started (not YET TO START) comes first
+                return $isYetToStartA ? 1 : -1;
+            }
+
+            // 5. Fallback: Sort by BIB
             // This also handles the case where race hasn't started (lastCpIndex = -1 for all)
             return strnatcmp($a->bib, $b->bib);
         })
