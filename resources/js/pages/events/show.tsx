@@ -223,7 +223,7 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
             <Head title={`${event.title} - Results`} />
 
             <div className="min-h-screen bg-[#efefef] dark:bg-slate-950 pb-12">
-                <EventHeader event={event} isLive={isLive} />
+                <EventHeader event={event} isLive={isLive} activeCategorySlug={activeCategory?.slug ?? ''} />
 
                 {elevationData.length > 0 && (
                     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">

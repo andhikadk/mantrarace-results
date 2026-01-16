@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { router } from '@inertiajs/react';
 
 interface CategoryInfo {
     id: number;
@@ -23,7 +24,10 @@ export function CategoryTabs({ categories, activeSlug, onSelect }: Props) {
                             <button
                                 key={category.id}
                                 type="button"
-                                onClick={() => onSelect(category.slug)}
+                                onClick={() => {
+                                    router.cancel();
+                                    onSelect(category.slug);
+                                }}
                                 aria-pressed={isActive}
                                 className={cn(
                                     'flex-1 py-4 text-center text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer',

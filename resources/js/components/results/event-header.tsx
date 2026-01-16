@@ -1,15 +1,16 @@
+import { Button } from '@/components/ui/button';
 import { type Event } from '@/types';
 import { router } from '@inertiajs/react';
 import { RefreshCw } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 
 interface Props {
     event: Event;
     isLive?: boolean;
+    activeCategorySlug: string;
 }
 
-export function EventHeader({ event, isLive }: Props) {
+export function EventHeader({ event, isLive, activeCategorySlug }: Props) {
     return (
         <div className="bg-white dark:bg-slate-950 pt-6 pb-2">
             <div className="mx-auto max-w-6xl px-4">
@@ -32,7 +33,7 @@ export function EventHeader({ event, isLive }: Props) {
                         </h1>
                     </div>
                     <div className="flex items-start gap-2">
-                        <RefreshButton />
+                        <RefreshButton eventSlug={event.slug} activeCategorySlug={activeCategorySlug} />
                     </div>
                 </div>
             </div>
@@ -40,16 +41,18 @@ export function EventHeader({ event, isLive }: Props) {
     );
 }
 
-function RefreshButton() {
+function RefreshButton({ eventSlug, activeCategorySlug }: { eventSlug: string; activeCategorySlug: string }) {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleRefresh = () => {
         setIsLoading(true);
-        router.reload({
+        router.cancel();
+        router.visit(`/${eventSlug}`, {
             headers: {
                 'X-Force-Refresh': 'true',
             },
-            only: ['leaderboard', 'isLive'],
+            data: { category: activeCategorySlug },
+            only: ['leaderboard', 'activeCategory', 'elevationData', 'elevationWaypoints', 'isLive'],
             onFinish: () => setIsLoading(false),
         });
     };
