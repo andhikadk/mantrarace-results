@@ -366,14 +366,26 @@ class RaceResultService
                 return strnatcmp($a->bib, $b->bib);
             }
 
-            // 1. Priority: Finished Participants
+            // 1. Priority: Finished Participants - Sort by finish time
             if ($isFinishedA && $isFinishedB) {
-                $rankA = $a->overallRank > 0 ? $a->overallRank : PHP_INT_MAX;
-                $rankB = $b->overallRank > 0 ? $b->overallRank : PHP_INT_MAX;
+                // Compare finish times (format: HH:MM:SS, string comparison works)
+                $timeA = $a->finishTime ?? '';
+                $timeB = $b->finishTime ?? '';
 
-                return $rankA === $rankB
-                   ? strnatcmp($a->bib, $b->bib)
-                   : $rankA <=> $rankB;
+                // Empty times go to bottom
+                if ($timeA === '' && $timeB === '') {
+                    return strnatcmp($a->bib, $b->bib);
+                }
+                if ($timeA === '') {
+                    return 1;
+                }
+                if ($timeB === '') {
+                    return -1;
+                }
+
+                $timeCmp = strcmp($timeA, $timeB);
+
+                return $timeCmp === 0 ? strnatcmp($a->bib, $b->bib) : $timeCmp;
             }
             if ($isFinishedA) {
                 return -1;
@@ -433,6 +445,30 @@ class RaceResultService
             return strnatcmp($a->bib, $b->bib);
         })
             ->values();
+
+        // Recalculate overallRank for finished participants based on sorted position (by finish time)
+        $finishedRank = 1;
+        $mapped = $mapped->map(function (ParticipantData $p) use (&$finishedRank) {
+            if ($this->isFinishedStatus($p->status) && ! $this->isDnfOrDnsStatus($p->status)) {
+                // Create new ParticipantData with recalculated rank
+                return new ParticipantData(
+                    overallRank: $finishedRank++,
+                    genderRank: $p->genderRank, // Keep original for now
+                    bib: $p->bib,
+                    name: $p->name,
+                    gender: $p->gender,
+                    nation: $p->nation,
+                    club: $p->club,
+                    finishTime: $p->finishTime,
+                    netTime: $p->netTime,
+                    gap: $p->gap,
+                    status: $p->status,
+                    checkpoints: $p->checkpoints,
+                );
+            }
+
+            return $p;
+        });
 
         if ($this->shouldLogMetrics()) {
             Log::info('raceresult.map', [
