@@ -265,6 +265,30 @@ class RaceResultService
     }
 
     /**
+     * Convert time string (HH:MM:SS, MM:SS, or H:MM:SS) to total seconds
+     * Returns PHP_INT_MAX for invalid/empty times so they sort to the bottom
+     */
+    private function timeToSeconds(?string $time): int
+    {
+        if ($time === null || $time === '') {
+            return PHP_INT_MAX;
+        }
+
+        $parts = explode(':', $time);
+        $count = count($parts);
+
+        if ($count === 3) {
+            // HH:MM:SS or H:MM:SS
+            return (int) $parts[0] * 3600 + (int) $parts[1] * 60 + (int) $parts[2];
+        } elseif ($count === 2) {
+            // MM:SS
+            return (int) $parts[0] * 60 + (int) $parts[1];
+        }
+
+        return PHP_INT_MAX;
+    }
+
+    /**
      * @return array{fetched_at:int,items:array<int,array<string,mixed>>}|null
      */
     private function getCachedPayload(Category $category): ?array
@@ -368,24 +392,15 @@ class RaceResultService
 
             // 1. Priority: Finished Participants - Sort by finish time
             if ($isFinishedA && $isFinishedB) {
-                // Compare finish times (format: HH:MM:SS, string comparison works)
-                $timeA = $a->finishTime ?? '';
-                $timeB = $b->finishTime ?? '';
+                // Convert finish times to seconds for proper comparison
+                $secondsA = $this->timeToSeconds($a->finishTime);
+                $secondsB = $this->timeToSeconds($b->finishTime);
 
-                // Empty times go to bottom
-                if ($timeA === '' && $timeB === '') {
+                if ($secondsA === $secondsB) {
                     return strnatcmp($a->bib, $b->bib);
                 }
-                if ($timeA === '') {
-                    return 1;
-                }
-                if ($timeB === '') {
-                    return -1;
-                }
 
-                $timeCmp = strcmp($timeA, $timeB);
-
-                return $timeCmp === 0 ? strnatcmp($a->bib, $b->bib) : $timeCmp;
+                return $secondsA <=> $secondsB;
             }
             if ($isFinishedA) {
                 return -1;
