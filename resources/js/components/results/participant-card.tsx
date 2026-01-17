@@ -214,7 +214,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
                             return (
                                 <>
                                     <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">
-                                        {showLastPos ? 'LAST POS' : 'GAP'}
+                                        {showLastPos ? 'LAST POS' : 'GENDER GAP'}
                                     </div>
                                     <div className="flex items-center justify-end gap-1.5">
                                         {/* Rank Trend Indicator */}

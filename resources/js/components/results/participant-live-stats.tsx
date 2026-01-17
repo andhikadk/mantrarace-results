@@ -158,7 +158,7 @@ export function ParticipantLiveStats({
                         {/* Gap */}
                         {gap && (
                             <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
-                                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Gap</span>
+                                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Gender Gap</span>
                                 <span className="font-mono text-lg font-bold text-slate-600 dark:text-slate-300">
                                     {gap}
                                 </span>
