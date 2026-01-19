@@ -13,6 +13,8 @@ class Category extends Model
         return [
             'total_distance' => 'float',
             'total_elevation_gain' => 'float',
+            'start_time' => 'datetime',
+            'cut_off_time' => 'datetime',
         ];
     }
 

@@ -34,6 +34,8 @@ class CategoryController extends Controller
             'gpx_file' => 'nullable|file|max:10240',
             'total_distance' => 'nullable|numeric|min:0',
             'total_elevation_gain' => 'nullable|numeric|min:0',
+            'start_time' => 'nullable|date',
+            'cut_off_time' => 'nullable|date|after:start_time',
         ]);
 
         if (empty($validated['slug'])) {
@@ -56,6 +58,8 @@ class CategoryController extends Controller
             'gpx_path' => $gpxPath,
             'total_distance' => $validated['total_distance'] ?? null,
             'total_elevation_gain' => $validated['total_elevation_gain'] ?? null,
+            'start_time' => $validated['start_time'] ?? null,
+            'cut_off_time' => $validated['cut_off_time'] ?? null,
         ]);
 
         return redirect()
@@ -85,6 +89,8 @@ class CategoryController extends Controller
             'endpoint_url' => 'required|url|max:500',
             'total_distance' => 'nullable|numeric|min:0',
             'total_elevation_gain' => 'nullable|numeric|min:0',
+            'start_time' => 'nullable|date',
+            'cut_off_time' => 'nullable|date|after:start_time',
         ]);
 
         if (empty($validated['slug'])) {
@@ -102,6 +108,8 @@ class CategoryController extends Controller
             'endpoint_url' => $validated['endpoint_url'],
             'total_distance' => $validated['total_distance'] ?? null,
             'total_elevation_gain' => $validated['total_elevation_gain'] ?? null,
+            'start_time' => $validated['start_time'] ?? null,
+            'cut_off_time' => $validated['cut_off_time'] ?? null,
         ]);
 
         return redirect()

@@ -45,6 +45,8 @@ export default function CategoryEdit({ category }: Props) {
         endpoint_url: category.endpoint_url,
         total_distance: category.total_distance ?? ('' as string | number),
         total_elevation_gain: category.total_elevation_gain ?? ('' as string | number),
+        start_time: category.start_time ? new Date(category.start_time).toISOString().slice(0, 16) : '',
+        cut_off_time: category.cut_off_time ? new Date(category.cut_off_time).toISOString().slice(0, 16) : '',
     });
 
     const certForm = useForm<{ template: File | null; enabled: boolean; fields_config: FieldsConfig | null | object }>({
@@ -281,6 +283,28 @@ export default function CategoryEdit({ category }: Props) {
                                                 onChange={(e) => categoryForm.setData('total_elevation_gain', e.target.value === '' ? '' : parseFloat(e.target.value))}
                                                 placeholder="e.g. 1500"
                                             />
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="start_time">Start Time</Label>
+                                            <Input
+                                                id="start_time"
+                                                type="datetime-local"
+                                                value={categoryForm.data.start_time}
+                                                onChange={(e) => categoryForm.setData('start_time', e.target.value)}
+                                            />
+                                            <p className="text-xs text-muted-foreground">Race start time for cut-off calculation</p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="cut_off_time">Cut Off Time</Label>
+                                            <Input
+                                                id="cut_off_time"
+                                                type="datetime-local"
+                                                value={categoryForm.data.cut_off_time}
+                                                onChange={(e) => categoryForm.setData('cut_off_time', e.target.value)}
+                                            />
+                                            <p className="text-xs text-muted-foreground">Participants finishing after this time will be marked as COT</p>
                                         </div>
                                     </div>
                                     <div className="pt-4">

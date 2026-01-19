@@ -75,8 +75,13 @@ class CertificateController extends Controller
 
         // Check if participant has finished
         // Strict check: Status must be "FINISHED" OR finishTime must be present
+        // COT (Cut Off Time) participants are NOT eligible for certificates
         $status = strtoupper($participant->status ?? '');
         $hasFinishTime = ! empty($participant->finishTime);
+
+        if ($participant->isCot) {
+            abort(404, 'Certificate not available for participants who exceeded cut-off time');
+        }
 
         if ($status !== 'FINISHED' && ! $hasFinishTime) {
             abort(404, 'Certificate only available for finishers');

@@ -99,12 +99,33 @@ class RaceResultService
      * Map raw API data to ParticipantData
      *
      * @param  Collection<int, Checkpoint>  $checkpoints
+     * @param  \DateTimeInterface|null  $startTime  Race start datetime
+     * @param  \DateTimeInterface|null  $cutOffTime  Cut off datetime
      */
-    private function mapParticipant(array $row, Collection $checkpoints): ParticipantData
+    private function mapParticipant(array $row, Collection $checkpoints, ?\DateTimeInterface $startTime, ?\DateTimeInterface $cutOffTime): ParticipantData
     {
         $status = $row['Status'] ?? '';
         $finishTime = $this->cleanTimeValue($row['Finish Time'] ?? null);
         $isFinished = $this->isFinishedStatus($status);
+
+        // Check COT: If finished but elapsed time exceeds cut off time
+        $isCot = false;
+        if ($isFinished && $startTime && $cutOffTime && $finishTime) {
+            $cutOffSeconds = $cutOffTime->getTimestamp() - $startTime->getTimestamp();
+            $finishSeconds = $this->timeToSeconds($finishTime);
+            Log::debug('COT Check', [
+                'bib' => $row['BIB'] ?? '',
+                'startTime' => $startTime?->format('Y-m-d H:i:s'),
+                'cutOffTime' => $cutOffTime?->format('Y-m-d H:i:s'),
+                'cutOffSeconds' => $cutOffSeconds,
+                'finishTime' => $finishTime,
+                'finishSeconds' => $finishSeconds,
+                'isCot' => $finishSeconds > $cutOffSeconds,
+            ]);
+            if ($cutOffSeconds > 0 && $finishSeconds > $cutOffSeconds) {
+                $isCot = true;
+            }
+        }
 
         return new ParticipantData(
             overallRank: $isFinished ? (int) ($row['Overall Rank'] ?? 0) : 0,
@@ -119,6 +140,7 @@ class RaceResultService
             gap: $this->cleanTimeValue($row['Gap'] ?? null),
             status: $status,
             checkpoints: $this->mapCheckpoints($row, $checkpoints),
+            isCot: $isCot,
         );
     }
 
@@ -264,6 +286,11 @@ class RaceResultService
             || str_contains($normalized, 'WITHDRAWN');
     }
 
+    private function isCotStatus(string $status): bool
+    {
+        return strtoupper(trim($status)) === 'COT';
+    }
+
     /**
      * Convert time string (HH:MM:SS, MM:SS, or H:MM:SS) to total seconds
      * Returns PHP_INT_MAX for invalid/empty times so they sort to the bottom
@@ -371,9 +398,11 @@ class RaceResultService
         }
 
         $checkpoints = $category->checkpoints;
+        $startTime = $category->start_time;
+        $cutOffTime = $category->cut_off_time;
         $mapStart = microtime(true);
         $mapped = collect($rawData)
-            ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints));
+            ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints, $startTime, $cutOffTime));
 
         $mapped = $mapped->sort(function (ParticipantData $a, ParticipantData $b) {
             $isFinishedA = $this->isFinishedStatus($a->status);
@@ -479,6 +508,7 @@ class RaceResultService
                     gap: $p->gap,
                     status: $p->status,
                     checkpoints: $p->checkpoints,
+                    isCot: $p->isCot,
                 );
             }
 
@@ -527,6 +557,7 @@ class RaceResultService
                 ),
                 $payload['checkpoints'] ?? []
             ),
+            isCot: (bool) ($payload['isCot'] ?? false),
         );
     }
 

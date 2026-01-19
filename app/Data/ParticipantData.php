@@ -20,6 +20,7 @@ readonly class ParticipantData
         public ?string $gap,
         public string $status,
         public array $checkpoints,
+        public bool $isCot = false,
     ) {}
 
     public function toArray(): array
@@ -37,6 +38,7 @@ readonly class ParticipantData
             'gap' => $this->gap,
             'status' => $this->status,
             'checkpoints' => array_map(fn (CheckpointData $cp) => $cp->toArray(), $this->checkpoints),
+            'isCot' => $this->isCot,
         ];
     }
 }

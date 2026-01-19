@@ -8,7 +8,7 @@ import { SearchFilters } from '@/components/results/search-filters';
 import { normalizeGender } from '@/lib/normalizeGender';
 import { type Event } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface CategoryInfo {
@@ -284,9 +284,20 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                                     <Button
                                         variant="outline"
                                         size="sm"
+                                        onClick={() => setCurrentPage(1)}
+                                        disabled={currentPage === 1}
+                                        className="h-8 w-8 p-0"
+                                        title="First Page"
+                                    >
+                                        <ChevronsLeft className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
                                         onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                                         disabled={currentPage === 1}
                                         className="h-8 w-8 p-0"
+                                        title="Previous Page"
                                     >
                                         <ChevronLeft className="h-4 w-4" />
                                     </Button>
@@ -299,8 +310,19 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                                         onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                                         disabled={currentPage === totalPages}
                                         className="h-8 w-8 p-0"
+                                        title="Next Page"
                                     >
                                         <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(totalPages)}
+                                        disabled={currentPage === totalPages}
+                                        className="h-8 w-8 p-0"
+                                        title="Last Page"
+                                    >
+                                        <ChevronsRight className="h-4 w-4" />
                                     </Button>
                                 </div>
                             )}

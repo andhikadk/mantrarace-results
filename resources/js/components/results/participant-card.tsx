@@ -15,6 +15,7 @@ export interface Participant {
     gap: string | null;
     status: string;
     checkpoints: CheckpointSplit[];
+    isCot?: boolean;
 }
 
 export interface CheckpointSplit {
@@ -32,7 +33,15 @@ interface Props {
     onClick: () => void;
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, isCot }: { status: string; isCot?: boolean }) {
+    // If isCot is true, show COT badge instead of the normal status
+    if (isCot) {
+        return (
+            <span className="inline-flex rounded-full bg-orange-100 dark:bg-orange-900/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-700 dark:text-orange-300">
+                COT
+            </span>
+        );
+    }
     const badge = getStatusBadge(status);
     return (
         <span className={`inline-flex rounded-full ${badge.bgClass} px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${badge.textClass}`}>
@@ -137,7 +146,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
                                     <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-0.5">
                                         STATUS
                                     </div>
-                                    <StatusBadge status={participant.status} />
+                                    <StatusBadge status={participant.status} isCot={participant.isCot} />
                                 </div>
                             </div>
                         </div>
@@ -251,7 +260,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
 
                     <div className="w-24 text-right">
                         <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">STATUS</div>
-                        <StatusBadge status={participant.status} />
+                        <StatusBadge status={participant.status} isCot={participant.isCot} />
                     </div>
                 </div>
             </button>
