@@ -3,6 +3,7 @@ import { type CheckpointSplit } from './participant-card';
 interface Props {
     checkpoints: CheckpointSplit[];
     lastReachedCheckpointIndex: number;
+    isLive?: boolean;
 }
 
 export function ParticipantTimeline({ checkpoints, lastReachedCheckpointIndex }: Props) {
@@ -61,10 +62,48 @@ export function ParticipantTimeline({ checkpoints, lastReachedCheckpointIndex }:
                                                 <div className="inline-flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                                                     <span className="text-[9px] uppercase text-slate-400">Overall Rank</span>
                                                     <span className="font-mono font-bold">{cp.overallRank || '-'}</span>
+                                                    {/* Rank Trend Indicator */}
+                                                    {(() => {
+                                                        if (idx > 0 && cp.overallRank && cp.overallRank > 0) {
+                                                            const prevCp = checkpoints[idx - 1];
+                                                            if (prevCp?.overallRank && prevCp.overallRank > 0) {
+                                                                const diff = prevCp.overallRank - cp.overallRank;
+                                                                if (diff !== 0) {
+                                                                    const isImproved = diff > 0;
+                                                                    return (
+                                                                        <div
+                                                                            className={`w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[5px] ${isImproved ? 'border-b-emerald-500' : 'border-b-red-500 rotate-180'}`}
+                                                                            title={`Rank ${isImproved ? 'improved' : 'dropped'} from ${prevCp.overallRank} to ${cp.overallRank}`}
+                                                                        />
+                                                                    );
+                                                                }
+                                                            }
+                                                        }
+                                                        return null;
+                                                    })()}
                                                 </div>
                                                 <div className="inline-flex items-center gap-1 rounded bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/30">
                                                     <span className="text-[9px] uppercase text-indigo-400/80">Gender Rank</span>
                                                     <span className="font-mono font-bold">{cp.genderRank || '-'}</span>
+                                                    {/* Gender Rank Trend Indicator */}
+                                                    {(() => {
+                                                        if (idx > 0 && cp.genderRank && cp.genderRank > 0) {
+                                                            const prevCp = checkpoints[idx - 1];
+                                                            if (prevCp?.genderRank && prevCp.genderRank > 0) {
+                                                                const diff = prevCp.genderRank - cp.genderRank;
+                                                                if (diff !== 0) {
+                                                                    const isImproved = diff > 0;
+                                                                    return (
+                                                                        <div
+                                                                            className={`w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-b-[5px] ${isImproved ? 'border-b-emerald-500' : 'border-b-red-500 rotate-180'}`}
+                                                                            title={`Gender Rank ${isImproved ? 'improved' : 'dropped'} from ${prevCp.genderRank} to ${cp.genderRank}`}
+                                                                        />
+                                                                    );
+                                                                }
+                                                            }
+                                                        }
+                                                        return null;
+                                                    })()}
                                                 </div>
                                             </div>
                                         )}
