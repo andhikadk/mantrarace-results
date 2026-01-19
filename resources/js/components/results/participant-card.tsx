@@ -170,17 +170,17 @@ export function ParticipantCard({ participant, onClick }: Props) {
                     </div> */}
 
                     <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                             <div className="flex min-w-0 items-center gap-2">
-                                <span className="relative inline-flex h-8 min-w-[56px] items-center justify-center border border-[#100d67] dark:border-slate-600 bg-white dark:bg-slate-950 px-3 font-mono font-extrabold text-[#100d67] dark:text-slate-100 shadow-[inset_0_0_0_1px_rgba(16,13,103,0.06)] ring-1 ring-slate-200 dark:ring-slate-700">
+                                <span className="relative inline-flex h-8 min-w-[56px] items-center justify-center border border-[#100d67] dark:border-slate-600 bg-white dark:bg-slate-950 px-3 font-mono font-extrabold text-[#100d67] dark:text-slate-100 shadow-[inset_0_0_0_1px_rgba(16,13,103,0.06)] ring-1 ring-slate-200 dark:ring-slate-700 shrink-0">
                                     <span className="absolute left-1 top-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
                                     <span className="absolute right-1 top-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
                                     <span className="absolute left-1 bottom-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
                                     <span className="absolute right-1 bottom-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
                                     {participant.bib}
                                 </span>
-                                <div>
-                                    <span className="truncate text-sm font-bold uppercase text-slate-900 dark:text-slate-100">
+                                <div className="min-w-0 flex-1">
+                                    <div className="text-sm font-bold uppercase text-slate-900 dark:text-slate-100 wrap-break-word">
                                         {participant.name}
                                         {flagCode && (
                                             <span
@@ -189,9 +189,9 @@ export function ParticipantCard({ participant, onClick }: Props) {
                                                 aria-label={participant.nation}
                                             />
                                         )}
-                                    </span>
+                                    </div>
                                     {participant.club && (
-                                        <div className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+                                        <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 wrap-break-word">
                                             {participant.club}
                                         </div>
                                     )}

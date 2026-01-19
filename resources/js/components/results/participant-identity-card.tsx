@@ -58,7 +58,7 @@ export function ParticipantIdentityCard({
                         )}
                     </div>
                     {participant.club && (
-                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400 truncate">
+                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400 break-words">
                             {participant.club}
                         </div>
                     )}
