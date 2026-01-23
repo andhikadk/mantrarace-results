@@ -111,6 +111,12 @@ class RaceResultService
         if ($isEventEnded && $this->isYetToStartStatus($status)) {
             $status = 'DNS';
         }
+
+        // Convert to "DNF" if event ended but participant not finished (e.g. "Started" status)
+        if ($isEventEnded && ! $this->isFinishedStatus($status) && ! $this->isDnfOrDnsStatus($status)) {
+            $status = 'DNF';
+        }
+
         $finishTime = $this->cleanTimeValue($row['Finish Time'] ?? null);
         $isFinished = $this->isFinishedStatus($status);
 
@@ -297,8 +303,14 @@ class RaceResultService
         $normalized = strtoupper(str_replace('_', ' ', trim($status)));
 
         return $normalized === 'DNF'
-            || str_starts_with($normalized, 'DNF')
-            || str_contains($normalized, 'WITHDRAWN');
+            || str_starts_with($normalized, 'DNF');
+    }
+
+    private function isWithdrawnStatus(string $status): bool
+    {
+        $normalized = strtoupper(str_replace('_', ' ', trim($status)));
+
+        return str_contains($normalized, 'WITHDRAWN');
     }
 
     private function isCotStatus(string $status): bool
@@ -434,14 +446,19 @@ class RaceResultService
             if ($isDnfDnsA !== $isDnfDnsB) {
                 return $isDnfDnsA ? 1 : -1;
             }
-            // If both are DNF/DNS, sort DNF before DNS, then by BIB
+            // If both are DNF/DNS/Withdrawn, sort: DNF -> Withdrawn -> DNS, then by BIB
             if ($isDnfDnsA && $isDnfDnsB) {
                 $isDnfA = $this->isDnfStatus($a->status);
                 $isDnfB = $this->isDnfStatus($b->status);
+                $isWithdrawnA = $this->isWithdrawnStatus($a->status);
+                $isWithdrawnB = $this->isWithdrawnStatus($b->status);
 
-                // DNF comes before DNS
-                if ($isDnfA !== $isDnfB) {
-                    return $isDnfA ? -1 : 1;
+                // Assign priority: DNF = 1, Withdrawn = 2, DNS = 3
+                $priorityA = $isDnfA ? 1 : ($isWithdrawnA ? 2 : 3);
+                $priorityB = $isDnfB ? 1 : ($isWithdrawnB ? 2 : 3);
+
+                if ($priorityA !== $priorityB) {
+                    return $priorityA <=> $priorityB;
                 }
 
                 return strnatcmp($a->bib, $b->bib);
