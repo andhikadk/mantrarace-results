@@ -446,7 +446,7 @@ class RaceResultService
             if ($isDnfDnsA !== $isDnfDnsB) {
                 return $isDnfDnsA ? 1 : -1;
             }
-            // If both are DNF/DNS/Withdrawn, sort: DNF -> Withdrawn -> DNS, then by BIB
+            // If both are DNF/DNS/Withdrawn, sort: DNF -> Withdrawn -> DNS
             if ($isDnfDnsA && $isDnfDnsB) {
                 $isDnfA = $this->isDnfStatus($a->status);
                 $isDnfB = $this->isDnfStatus($b->status);
@@ -459,6 +459,30 @@ class RaceResultService
 
                 if ($priorityA !== $priorityB) {
                     return $priorityA <=> $priorityB;
+                }
+
+                // Within same status group, sort by last checkpoint reached
+                $lastCpA = -1;
+                $lastCpB = -1;
+                foreach ($a->checkpoints as $i => $cp) {
+                    if (!empty($cp->time)) $lastCpA = $i;
+                }
+                foreach ($b->checkpoints as $i => $cp) {
+                    if (!empty($cp->time)) $lastCpB = $i;
+                }
+
+                // Further checkpoint = higher position
+                if ($lastCpA !== $lastCpB) {
+                    return $lastCpB <=> $lastCpA;
+                }
+
+                // Same checkpoint: sort by rank at that checkpoint
+                if ($lastCpA >= 0) {
+                    $cpRankA = $a->checkpoints[$lastCpA]->overallRank ?? PHP_INT_MAX;
+                    $cpRankB = $b->checkpoints[$lastCpB]->overallRank ?? PHP_INT_MAX;
+                    if ($cpRankA !== $cpRankB) {
+                        return $cpRankA <=> $cpRankB;
+                    }
                 }
 
                 return strnatcmp($a->bib, $b->bib);
