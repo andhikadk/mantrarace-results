@@ -101,10 +101,16 @@ class RaceResultService
      * @param  Collection<int, Checkpoint>  $checkpoints
      * @param  \DateTimeInterface|null  $startTime  Race start datetime
      * @param  \DateTimeInterface|null  $cutOffTime  Cut off datetime
+     * @param  bool  $isEventEnded  Whether the event has ended
      */
-    private function mapParticipant(array $row, Collection $checkpoints, ?\DateTimeInterface $startTime, ?\DateTimeInterface $cutOffTime): ParticipantData
+    private function mapParticipant(array $row, Collection $checkpoints, ?\DateTimeInterface $startTime, ?\DateTimeInterface $cutOffTime, bool $isEventEnded = false): ParticipantData
     {
         $status = $row['Status'] ?? '';
+
+        // Convert "Yet to Start" to "DNS" if event has ended
+        if ($isEventEnded && $this->isYetToStartStatus($status)) {
+            $status = 'DNS';
+        }
         $finishTime = $this->cleanTimeValue($row['Finish Time'] ?? null);
         $isFinished = $this->isFinishedStatus($status);
 
@@ -286,6 +292,15 @@ class RaceResultService
             || str_contains($normalized, 'WITHDRAWN');
     }
 
+    private function isDnfStatus(string $status): bool
+    {
+        $normalized = strtoupper(str_replace('_', ' ', trim($status)));
+
+        return $normalized === 'DNF'
+            || str_starts_with($normalized, 'DNF')
+            || str_contains($normalized, 'WITHDRAWN');
+    }
+
     private function isCotStatus(string $status): bool
     {
         return strtoupper(trim($status)) === 'COT';
@@ -400,9 +415,14 @@ class RaceResultService
         $checkpoints = $category->checkpoints;
         $startTime = $category->start_time;
         $cutOffTime = $category->cut_off_time;
+
+        // Check if event has ended (use end_date, fallback to start_date)
+        $eventDate = $category->event?->end_date ?? $category->event?->start_date;
+        $isEventEnded = $eventDate && $eventDate->isPast();
+
         $mapStart = microtime(true);
         $mapped = collect($rawData)
-            ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints, $startTime, $cutOffTime));
+            ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints, $startTime, $cutOffTime, $isEventEnded));
 
         $mapped = $mapped->sort(function (ParticipantData $a, ParticipantData $b) {
             $isFinishedA = $this->isFinishedStatus($a->status);
@@ -414,8 +434,16 @@ class RaceResultService
             if ($isDnfDnsA !== $isDnfDnsB) {
                 return $isDnfDnsA ? 1 : -1;
             }
-            // If both are DNF/DNS, sort by BIB
+            // If both are DNF/DNS, sort DNF before DNS, then by BIB
             if ($isDnfDnsA && $isDnfDnsB) {
+                $isDnfA = $this->isDnfStatus($a->status);
+                $isDnfB = $this->isDnfStatus($b->status);
+
+                // DNF comes before DNS
+                if ($isDnfA !== $isDnfB) {
+                    return $isDnfA ? -1 : 1;
+                }
+
                 return strnatcmp($a->bib, $b->bib);
             }
 
