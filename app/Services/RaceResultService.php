@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\TimingSystemInterface;
 use App\Data\CheckpointData;
+use App\Data\LapStatsData;
 use App\Data\ParticipantData;
 use App\Jobs\RefreshRaceResultCache;
 use App\Models\Category;
@@ -103,7 +104,7 @@ class RaceResultService
      * @param  \DateTimeInterface|null  $cutOffTime  Cut off datetime
      * @param  bool  $isEventEnded  Whether the event has ended
      */
-    private function mapParticipant(array $row, Collection $checkpoints, ?\DateTimeInterface $startTime, ?\DateTimeInterface $cutOffTime, bool $isEventEnded = false): ParticipantData
+    private function mapParticipant(array $row, Collection $checkpoints, ?\DateTimeInterface $startTime, ?\DateTimeInterface $cutOffTime, bool $isEventEnded = false, ?Category $category = null): ParticipantData
     {
         $status = $row['Status'] ?? '';
 
@@ -139,6 +140,19 @@ class RaceResultService
             }
         }
 
+        $lapStats = null;
+        if ($category && $category->event?->is_lap_based && $category->lap_stats_config) {
+            $config = $category->lap_stats_config;
+            $lapStats = new LapStatsData(
+                totalLaps: $this->cleanValue($row[$config['total_laps_field'] ?? 'Laps'] ?? null),
+                bestLap: $this->cleanTimeValue($row[$config['best_lap_field'] ?? 'BestLap'] ?? null),
+                avgLap: $this->cleanTimeValue($row[$config['avg_lap_field'] ?? 'Avg.Lap'] ?? null),
+                currentCp: $this->cleanValue($row[$config['current_cp_field'] ?? 'CP'] ?? null),
+                cpTime: $this->cleanTimeValue($row[$config['cp_time_field'] ?? 'CPmin'] ?? null),
+                segment: $this->cleanTimeValue($row[$config['segment_field'] ?? 'Segment'] ?? null),
+            );
+        }
+
         return new ParticipantData(
             overallRank: $isFinished ? (int) ($row['Overall Rank'] ?? 0) : 0,
             genderRank: $isFinished ? (int) ($row['Gender Rank'] ?? 0) : 0,
@@ -153,6 +167,7 @@ class RaceResultService
             status: $status,
             checkpoints: $this->mapCheckpoints($row, $checkpoints),
             isCot: $isCot,
+            lapStats: $lapStats,
         );
     }
 
@@ -237,6 +252,25 @@ class RaceResultService
 
         // Trim and normalize whitespace
         return trim(preg_replace('/\s+/', ' ', $name));
+    }
+
+    /**
+     * Clean general value (handle placeholders and empty values)
+     */
+    private function cleanValue(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $str = (string) $value;
+
+        // Detect placeholder format like "[4|HH:mm:ss]"
+        if (preg_match('/^\[\d+\|[^\]]+\]$/', $str)) {
+            return null;
+        }
+
+        return trim($str);
     }
 
     /**
@@ -434,7 +468,7 @@ class RaceResultService
 
         $mapStart = microtime(true);
         $mapped = collect($rawData)
-            ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints, $startTime, $cutOffTime, $isEventEnded));
+            ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints, $startTime, $cutOffTime, $isEventEnded, $category));
 
         $mapped = $mapped->sort(function (ParticipantData $a, ParticipantData $b) {
             $isFinishedA = $this->isFinishedStatus($a->status);
@@ -465,10 +499,14 @@ class RaceResultService
                 $lastCpA = -1;
                 $lastCpB = -1;
                 foreach ($a->checkpoints as $i => $cp) {
-                    if (!empty($cp->time)) $lastCpA = $i;
+                    if (! empty($cp->time)) {
+                        $lastCpA = $i;
+                    }
                 }
                 foreach ($b->checkpoints as $i => $cp) {
-                    if (!empty($cp->time)) $lastCpB = $i;
+                    if (! empty($cp->time)) {
+                        $lastCpB = $i;
+                    }
                 }
 
                 // Further checkpoint = higher position

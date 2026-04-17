@@ -37,6 +37,7 @@ class EventController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'certificate_availability_date' => 'nullable|date',
+            'is_lap_based' => 'nullable|boolean',
         ]);
 
         if (empty($validated['slug'])) {
@@ -77,6 +78,7 @@ class EventController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'certificate_availability_date' => 'nullable|date',
+            'is_lap_based' => 'nullable|boolean',
         ]);
 
         if (empty($validated['slug'])) {

@@ -1,6 +1,10 @@
-import { getDisplayStatus, getFlagCode, getStatusBadge } from '@/lib/participantUtils';
 import { normalizeGender } from '@/lib/normalizeGender';
-import { Mars, Venus, Users } from 'lucide-react';
+import {
+    getDisplayStatus,
+    getFlagCode,
+    getStatusBadge,
+} from '@/lib/participantUtils';
+import { Mars, Users, Venus } from 'lucide-react';
 
 export interface Participant {
     overallRank: number;
@@ -16,6 +20,16 @@ export interface Participant {
     status: string;
     checkpoints: CheckpointSplit[];
     isCot?: boolean;
+    lapStats?: LapStats;
+}
+
+export interface LapStats {
+    totalLaps?: string | number;
+    bestLap?: string;
+    avgLap?: string;
+    currentCp?: string;
+    cpTime?: string;
+    segment?: string;
 }
 
 export interface CheckpointSplit {
@@ -32,20 +46,23 @@ interface Props {
     participant: Participant;
     onClick: () => void;
     isLive?: boolean;
+    isLapBased?: boolean;
 }
 
 function StatusBadge({ status, isCot }: { status: string; isCot?: boolean }) {
     // If isCot is true, show COT badge instead of the normal status
     if (isCot) {
         return (
-            <span className="inline-flex rounded-full bg-orange-100 dark:bg-orange-900/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-700 dark:text-orange-300">
+            <span className="inline-flex rounded-full bg-orange-100 px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-orange-700 uppercase dark:bg-orange-900/30 dark:text-orange-300">
                 COT
             </span>
         );
     }
     const badge = getStatusBadge(status);
     return (
-        <span className={`inline-flex rounded-full ${badge.bgClass} px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${badge.textClass}`}>
+        <span
+            className={`inline-flex rounded-full ${badge.bgClass} px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase ${badge.textClass}`}
+        >
             {badge.label}
         </span>
     );
@@ -53,34 +70,41 @@ function StatusBadge({ status, isCot }: { status: string; isCot?: boolean }) {
 
 function GenderIcon({ gender }: { gender: string }) {
     const normalized = normalizeGender(gender)?.toUpperCase();
-    if (normalized === 'MALE') return <Mars className="h-3 w-3 sm:h-3.5 sm:w-3.5" />;
-    if (normalized === 'FEMALE') return <Venus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />;
+    if (normalized === 'MALE')
+        return <Mars className="h-3 w-3 sm:h-3.5 sm:w-3.5" />;
+    if (normalized === 'FEMALE')
+        return <Venus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />;
     return <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" />;
 }
 
-export function ParticipantCard({ participant, onClick }: Props) {
+export function ParticipantCard({ participant, onClick, isLapBased }: Props) {
     const displayStatus = getDisplayStatus(participant.status);
     const flagCode = getFlagCode(participant.nation);
-    const normalizedGen = normalizeGender(participant.gender)?.toUpperCase() || participant.gender?.toUpperCase() || '-';
+    const normalizedGen =
+        normalizeGender(participant.gender)?.toUpperCase() ||
+        participant.gender?.toUpperCase() ||
+        '-';
 
     return (
-        <div className="w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-none md:rounded-none md:border-x-0 md:border-t-0 md:px-4 hover:bg-slate-100 dark:hover:bg-slate-800">
+        <div className="w-full rounded-md border border-slate-200 bg-white shadow-none hover:bg-slate-100 md:rounded-none md:border-x-0 md:border-t-0 md:px-4 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
             <button
                 type="button"
                 onClick={onClick}
-                className="w-full p-5 text-left md:flex-1 md:px-0 md:py-4 cursor-pointer"
+                className="w-full cursor-pointer p-5 text-left md:flex-1 md:px-0 md:py-4"
             >
                 {/* Mobile Card */}
                 <div className="md:hidden">
                     <div className="flex gap-4">
                         {/* LEFT: RANK */}
                         <div className="flex shrink-0 flex-col items-center justify-center">
-                            <span className="font-mono text-3xl font-bold italic leading-none text-[#f00102] dark:text-red-400">
+                            <span className="font-mono text-3xl leading-none font-bold text-[#f00102] italic dark:text-red-400">
                                 {participant.overallRank > 0
-                                    ? participant.overallRank.toString().padStart(2, '0')
+                                    ? participant.overallRank
+                                          .toString()
+                                          .padStart(2, '0')
                                     : '-'}
                             </span>
-                            <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
                                 RANK
                             </span>
                         </div>
@@ -90,17 +114,17 @@ export function ParticipantCard({ participant, onClick }: Props) {
                             {/* ROW 1: BIB + Name/Flag + Club */}
                             <div className="flex items-start gap-3">
                                 {/* BIB */}
-                                <span className="relative inline-flex h-8 min-w-[56px] items-center justify-center border border-[#100d67] dark:border-slate-600 bg-white dark:bg-slate-950 px-3 font-mono font-extrabold text-[#100d67] dark:text-slate-100 shadow-[inset_0_0_0_1px_rgba(16,13,103,0.06)] ring-1 ring-slate-200 dark:ring-slate-700 shrink-0">
-                                    <span className="absolute left-1 top-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
-                                    <span className="absolute right-1 top-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
-                                    <span className="absolute left-1 bottom-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                <span className="relative inline-flex h-8 min-w-[56px] shrink-0 items-center justify-center border border-[#100d67] bg-white px-3 font-mono font-extrabold text-[#100d67] shadow-[inset_0_0_0_1px_rgba(16,13,103,0.06)] ring-1 ring-slate-200 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-700">
+                                    <span className="absolute top-1 left-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                    <span className="absolute top-1 right-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                    <span className="absolute bottom-1 left-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
                                     <span className="absolute right-1 bottom-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
                                     {participant.bib}
                                 </span>
 
                                 {/* Name + Flag + Club */}
                                 <div className="min-w-0 flex-1">
-                                    <div className="text-base font-bold uppercase tracking-tight text-slate-900 dark:text-slate-100 leading-tight wrap-break-word">
+                                    <div className="text-base leading-tight font-bold tracking-tight wrap-break-word text-slate-900 uppercase dark:text-slate-100">
                                         {participant.name}
                                         {flagCode && (
                                             <span
@@ -112,7 +136,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
                                     </div>
 
                                     {participant.club && (
-                                        <div className="mt-1 text-sm text-slate-500 dark:text-slate-400 wrap-break-word">
+                                        <div className="mt-1 text-sm wrap-break-word text-slate-500 dark:text-slate-400">
                                             {participant.club}
                                         </div>
                                     )}
@@ -123,31 +147,44 @@ export function ParticipantCard({ participant, onClick }: Props) {
                             <div className="mt-3 flex items-center justify-between gap-4">
                                 {/* GENDER */}
                                 <div>
-                                    <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-0.5">
+                                    <div className="mb-0.5 text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
                                         GENDER
                                     </div>
                                     <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
-                                        <GenderIcon gender={participant.gender} />
+                                        <GenderIcon
+                                            gender={participant.gender}
+                                        />
                                         {normalizedGen}
                                     </div>
                                 </div>
 
-                                {/* TIME */}
+                                {/* TIME or LAP */}
                                 <div className="text-right">
-                                    <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-0.5">
-                                        TIME
+                                    <div className="mb-0.5 text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
+                                        {isLapBased && participant.lapStats
+                                            ? 'LAP'
+                                            : 'TIME'}
                                     </div>
                                     <div className="font-mono text-base font-bold text-slate-900 dark:text-slate-100">
-                                        {displayStatus === 'FINISHED' ? (participant.finishTime || '--:--:--') : '--:--:--'}
+                                        {isLapBased && participant.lapStats
+                                            ? (participant.lapStats.totalLaps ??
+                                              '-')
+                                            : displayStatus === 'FINISHED'
+                                              ? participant.finishTime ||
+                                                '--:--:--'
+                                              : '--:--:--'}
                                     </div>
                                 </div>
 
                                 {/* STATUS */}
                                 <div className="text-center">
-                                    <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-0.5">
+                                    <div className="mb-0.5 text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
                                         STATUS
                                     </div>
-                                    <StatusBadge status={participant.status} isCot={participant.isCot} />
+                                    <StatusBadge
+                                        status={participant.status}
+                                        isCot={participant.isCot}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -157,10 +194,16 @@ export function ParticipantCard({ participant, onClick }: Props) {
                 {/* Desktop Row */}
                 <div className="hidden md:flex md:items-center md:gap-4">
                     <div className="w-14 text-center">
-                        <div className="font-mono text-xl font-bold italic text-[#f00102] dark:text-red-400">
-                            {participant.overallRank > 0 ? participant.overallRank.toString().padStart(2, '0') : '-'}
+                        <div className="font-mono text-xl font-bold text-[#f00102] italic dark:text-red-400">
+                            {participant.overallRank > 0
+                                ? participant.overallRank
+                                      .toString()
+                                      .padStart(2, '0')
+                                : '-'}
                         </div>
-                        <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">RANK</div>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
+                            RANK
+                        </div>
                     </div>
                     {/* <div className="w-14 text-center">
                         <div className="font-mono text-xl font-bold italic text-[#100d67]">
@@ -172,15 +215,15 @@ export function ParticipantCard({ participant, onClick }: Props) {
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                         <div className="min-w-0 flex-1">
                             <div className="flex min-w-0 items-center gap-2">
-                                <span className="relative inline-flex h-8 min-w-[56px] items-center justify-center border border-[#100d67] dark:border-slate-600 bg-white dark:bg-slate-950 px-3 font-mono font-extrabold text-[#100d67] dark:text-slate-100 shadow-[inset_0_0_0_1px_rgba(16,13,103,0.06)] ring-1 ring-slate-200 dark:ring-slate-700 shrink-0">
-                                    <span className="absolute left-1 top-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
-                                    <span className="absolute right-1 top-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
-                                    <span className="absolute left-1 bottom-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                <span className="relative inline-flex h-8 min-w-[56px] shrink-0 items-center justify-center border border-[#100d67] bg-white px-3 font-mono font-extrabold text-[#100d67] shadow-[inset_0_0_0_1px_rgba(16,13,103,0.06)] ring-1 ring-slate-200 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-700">
+                                    <span className="absolute top-1 left-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                    <span className="absolute top-1 right-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
+                                    <span className="absolute bottom-1 left-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
                                     <span className="absolute right-1 bottom-1 h-0.5 w-0.5 rounded-full bg-[#100d67]/50 dark:bg-slate-400/70" />
                                     {participant.bib}
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                    <div className="text-sm font-bold uppercase text-slate-900 dark:text-slate-100 wrap-break-word">
+                                    <div className="text-sm font-bold wrap-break-word text-slate-900 uppercase dark:text-slate-100">
                                         {participant.name}
                                         {flagCode && (
                                             <span
@@ -191,7 +234,7 @@ export function ParticipantCard({ participant, onClick }: Props) {
                                         )}
                                     </div>
                                     {participant.club && (
-                                        <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 wrap-break-word">
+                                        <div className="mt-0.5 text-xs wrap-break-word text-slate-500 dark:text-slate-400">
                                             {participant.club}
                                         </div>
                                     )}
@@ -201,7 +244,9 @@ export function ParticipantCard({ participant, onClick }: Props) {
                     </div>
 
                     <div className="w-20 text-right">
-                        <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">GENDER</div>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
+                            GENDER
+                        </div>
                         <div className="flex items-center justify-end gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
                             <GenderIcon gender={participant.gender} />
                             {normalizedGen}
@@ -209,28 +254,38 @@ export function ParticipantCard({ participant, onClick }: Props) {
                     </div>
 
                     <div className="w-28 text-right">
-                        <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">FINISH TIME</div>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
+                            FINISH TIME
+                        </div>
                         <div className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
-                            {displayStatus === 'FINISHED' ? (participant.finishTime || '--:--:--') : '--:--:--'}
+                            {displayStatus === 'FINISHED'
+                                ? participant.finishTime || '--:--:--'
+                                : '--:--:--'}
                         </div>
                     </div>
 
                     <div className="w-32 text-right">
                         {(() => {
                             const isFinished = displayStatus === 'FINISHED';
-                            const lastCheckpoint = [...participant.checkpoints].reverse().find(cp => cp.time);
+                            const lastCheckpoint = [...participant.checkpoints]
+                                .reverse()
+                                .find((cp) => cp.time);
                             const showLastPos = !isFinished && lastCheckpoint;
 
                             return (
                                 <>
-                                    <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">
-                                        {showLastPos ? 'LAST POS' : 'GENDER GAP'}
+                                    <div className="text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
+                                        {showLastPos
+                                            ? 'LAST POS'
+                                            : 'GENDER GAP'}
                                     </div>
                                     <div className="flex items-center justify-end gap-1.5">
                                         {/* Rank Trend Indicator - Removed, only relevant for live races */}
 
                                         <div className="font-mono text-xs font-medium text-slate-500 dark:text-slate-400">
-                                            {showLastPos ? lastCheckpoint.name : (participant.gap || '-')}
+                                            {showLastPos
+                                                ? lastCheckpoint.name
+                                                : participant.gap || '-'}
                                         </div>
                                     </div>
                                 </>
@@ -239,9 +294,43 @@ export function ParticipantCard({ participant, onClick }: Props) {
                     </div>
 
                     <div className="w-24 text-right">
-                        <div className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500">STATUS</div>
-                        <StatusBadge status={participant.status} isCot={participant.isCot} />
+                        <div className="text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
+                            STATUS
+                        </div>
+                        <StatusBadge
+                            status={participant.status}
+                            isCot={participant.isCot}
+                        />
                     </div>
+
+                    {isLapBased && participant.lapStats && (
+                        <div className="flex gap-4 border-l pl-4">
+                            <div className="text-center">
+                                <div className="text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
+                                    LAPS
+                                </div>
+                                <div className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                    {participant.lapStats.totalLaps ?? '-'}
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
+                                    BEST
+                                </div>
+                                <div className="font-mono text-sm font-semibold text-green-600 dark:text-green-400">
+                                    {participant.lapStats.bestLap ?? '-'}
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
+                                    AVG
+                                </div>
+                                <div className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                    {participant.lapStats.avgLap ?? '-'}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </button>
         </div>

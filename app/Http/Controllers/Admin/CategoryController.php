@@ -36,6 +36,7 @@ class CategoryController extends Controller
             'total_elevation_gain' => 'nullable|numeric|min:0',
             'start_time' => 'nullable|date',
             'cut_off_time' => 'nullable|date|after:start_time',
+            'lap_stats_config' => 'nullable|array',
         ]);
 
         if (empty($validated['slug'])) {
@@ -60,6 +61,7 @@ class CategoryController extends Controller
             'total_elevation_gain' => $validated['total_elevation_gain'] ?? null,
             'start_time' => $validated['start_time'] ?? null,
             'cut_off_time' => $validated['cut_off_time'] ?? null,
+            'lap_stats_config' => $validated['lap_stats_config'] ?? null,
         ]);
 
         return redirect()
@@ -78,6 +80,8 @@ class CategoryController extends Controller
 
         return Inertia::render('admin/categories/edit', [
             'category' => $category,
+            'event' => $category->event,
+            'event_is_lap_based' => $category->event?->is_lap_based ?? false,
         ]);
     }
 
@@ -91,6 +95,7 @@ class CategoryController extends Controller
             'total_elevation_gain' => 'nullable|numeric|min:0',
             'start_time' => 'nullable|date',
             'cut_off_time' => 'nullable|date|after:start_time',
+            'lap_stats_config' => 'nullable|array',
         ]);
 
         if (empty($validated['slug'])) {
@@ -110,6 +115,7 @@ class CategoryController extends Controller
             'total_elevation_gain' => $validated['total_elevation_gain'] ?? null,
             'start_time' => $validated['start_time'] ?? null,
             'cut_off_time' => $validated['cut_off_time'] ?? null,
+            'lap_stats_config' => $validated['lap_stats_config'] ?? null,
         ]);
 
         return redirect()

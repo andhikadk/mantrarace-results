@@ -1,14 +1,23 @@
-import { Button } from '@/components/ui/button';
 import { CategoryTabs } from '@/components/results/category-tabs';
 import { ElevationChart } from '@/components/results/elevation-chart';
 import { EventHeader } from '@/components/results/event-header';
-import { ParticipantCard, type Participant } from '@/components/results/participant-card';
+import {
+    ParticipantCard,
+    type Participant,
+} from '@/components/results/participant-card';
 import { ParticipantModal } from '@/components/results/participant-modal';
 import { SearchFilters } from '@/components/results/search-filters';
+import { Button } from '@/components/ui/button';
 import { normalizeGender } from '@/lib/normalizeGender';
-import { type Event } from '@/types';
+import { type Event, type LapStatsConfig } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2 } from 'lucide-react';
+import {
+    ChevronLeft,
+    ChevronRight,
+    ChevronsLeft,
+    ChevronsRight,
+    Loader2,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface CategoryInfo {
@@ -35,11 +44,16 @@ interface ElevationWaypoint {
 interface Props {
     event: Event;
     categories: CategoryInfo[];
-    activeCategory: { slug: string; certificateEnabled: boolean } | null;
+    activeCategory: {
+        slug: string;
+        certificateEnabled: boolean;
+        lapStatsConfig?: LapStatsConfig | null;
+    } | null;
     leaderboard: Participant[];
     elevationData: ElevationPoint[];
     elevationWaypoints: ElevationWaypoint[];
     isLive: boolean;
+    isLapBased: boolean;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -48,11 +62,21 @@ const FILTER_LOADING_DELAY = 200;
 const RETRY_DELAY_MS = 1500;
 const MAX_RETRIES = 3;
 
-export default function EventShow({ event, categories, activeCategory, leaderboard, elevationData, elevationWaypoints, isLive }: Props) {
+export default function EventShow({
+    event,
+    categories,
+    activeCategory,
+    leaderboard,
+    elevationData,
+    elevationWaypoints,
+    isLive,
+    isLapBased,
+}: Props) {
     const [searchQuery, setSearchQuery] = useState('');
     const [genderFilter, setGenderFilter] = useState(DEFAULT_GENDER_FILTER);
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
+    const [selectedParticipant, setSelectedParticipant] =
+        useState<Participant | null>(null);
     const [isFiltering, setIsFiltering] = useState(false);
     const [isLoadingCategory, setIsLoadingCategory] = useState(false);
     const [isRetrying, setIsRetrying] = useState(false);
@@ -112,18 +136,26 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
 
     // Derived stats removed as StatsBar is removed
 
-    const handleCategorySelect = useCallback((slug: string) => {
-        if (slug === activeCategory?.slug) return;
-        resetFilters();
-        router.visit(`/${event.slug}`, {
-            preserveScroll: true,
-            preserveState: true,
-            data: { category: slug },
-            only: ['leaderboard', 'activeCategory', 'elevationData', 'elevationWaypoints'],
-            onStart: () => setIsLoadingCategory(true),
-            onFinish: () => setIsLoadingCategory(false),
-        });
-    }, [event.slug, activeCategory?.slug, resetFilters]);
+    const handleCategorySelect = useCallback(
+        (slug: string) => {
+            if (slug === activeCategory?.slug) return;
+            resetFilters();
+            router.visit(`/${event.slug}`, {
+                preserveScroll: true,
+                preserveState: true,
+                data: { category: slug },
+                only: [
+                    'leaderboard',
+                    'activeCategory',
+                    'elevationData',
+                    'elevationWaypoints',
+                ],
+                onStart: () => setIsLoadingCategory(true),
+                onFinish: () => setIsLoadingCategory(false),
+            });
+        },
+        [event.slug, activeCategory?.slug, resetFilters],
+    );
 
     const triggerFilterLoading = useCallback(() => {
         setIsFiltering(true);
@@ -136,17 +168,23 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
         }, FILTER_LOADING_DELAY);
     }, []);
 
-    const handleSearch = useCallback((value: string) => {
-        triggerFilterLoading();
-        setCurrentPage(1);
-        setSearchQuery(value);
-    }, [triggerFilterLoading]);
+    const handleSearch = useCallback(
+        (value: string) => {
+            triggerFilterLoading();
+            setCurrentPage(1);
+            setSearchQuery(value);
+        },
+        [triggerFilterLoading],
+    );
 
-    const handleGenderFilter = useCallback((value: string) => {
-        triggerFilterLoading();
-        setCurrentPage(1);
-        setGenderFilter(value);
-    }, [triggerFilterLoading]);
+    const handleGenderFilter = useCallback(
+        (value: string) => {
+            triggerFilterLoading();
+            setCurrentPage(1);
+            setGenderFilter(value);
+        },
+        [triggerFilterLoading],
+    );
 
     useEffect(() => {
         return () => {
@@ -179,7 +217,8 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
         // 2. We're not already loading/filtering/retrying
         // 3. We have an active category
         // 4. We haven't exceeded max retries
-        const shouldRetry = leaderboard.length === 0 &&
+        const shouldRetry =
+            leaderboard.length === 0 &&
             !isLoadingCategory &&
             !isFiltering &&
             !isRetrying &&
@@ -193,9 +232,9 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                 router.reload({
                     only: ['leaderboard'],
                     onFinish: () => {
-                        setRetryCount(prev => prev + 1);
+                        setRetryCount((prev) => prev + 1);
                         setIsRetrying(false);
-                    }
+                    },
                 });
             }, RETRY_DELAY_MS);
         }
@@ -206,7 +245,14 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                 retryTimeoutRef.current = null;
             }
         };
-    }, [leaderboard.length, isLoadingCategory, isFiltering, isRetrying, activeCategory, retryCount]);
+    }, [
+        leaderboard.length,
+        isLoadingCategory,
+        isFiltering,
+        isRetrying,
+        activeCategory,
+        retryCount,
+    ]);
 
     useEffect(() => {
         if (!isLive) return;
@@ -222,11 +268,15 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
         <>
             <Head title={`${event.title} - Results`} />
 
-            <div className="min-h-screen bg-[#efefef] dark:bg-slate-950 pb-12">
-                <EventHeader event={event} isLive={isLive} activeCategorySlug={activeCategory?.slug ?? ''} />
+            <div className="min-h-screen bg-[#efefef] pb-12 dark:bg-slate-950">
+                <EventHeader
+                    event={event}
+                    isLive={isLive}
+                    activeCategorySlug={activeCategory?.slug ?? ''}
+                />
 
                 {elevationData.length > 0 && (
-                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+                    <div className="mx-auto mt-8 max-w-6xl px-4 sm:px-6 lg:px-8">
                         <ElevationChart
                             data={elevationData}
                             waypoints={elevationWaypoints}
@@ -250,12 +300,16 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                     onGenderFilter={handleGenderFilter}
                 />
 
-                <div className="mx-auto max-w-6xl px-4 py-4 relative">
+                <div className="relative mx-auto max-w-6xl px-4 py-4">
                     {(isFiltering || isLoadingCategory || isRetrying) && (
                         <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#efefef]/80 dark:bg-slate-950/80">
                             <div className="flex flex-col items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
                                 <Loader2 className="h-5 w-5 animate-spin" />
-                                <span>{isRetrying ? 'Fetching results...' : 'Loading results...'}</span>
+                                <span>
+                                    {isRetrying
+                                        ? 'Fetching results...'
+                                        : 'Loading results...'}
+                                </span>
                             </div>
                         </div>
                     )}
@@ -270,13 +324,20 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                     ) : (
                         <>
                             <div className="space-y-3">
-                                {paginatedLeaderboard.map((participant, index) => (
-                                    <ParticipantCard
-                                        key={`${participant.bib}-${index}`}
-                                        participant={participant}
-                                        onClick={() => setSelectedParticipant(participant)}
-                                    />
-                                ))}
+                                {paginatedLeaderboard.map(
+                                    (participant, index) => (
+                                        <ParticipantCard
+                                            key={`${participant.bib}-${index}`}
+                                            participant={participant}
+                                            onClick={() =>
+                                                setSelectedParticipant(
+                                                    participant,
+                                                )
+                                            }
+                                            isLapBased={isLapBased}
+                                        />
+                                    ),
+                                )}
                             </div>
 
                             {totalPages > 1 && (
@@ -294,20 +355,28 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                        onClick={() =>
+                                            setCurrentPage((p) =>
+                                                Math.max(1, p - 1),
+                                            )
+                                        }
                                         disabled={currentPage === 1}
                                         className="h-8 w-8 p-0"
                                         title="Previous Page"
                                     >
                                         <ChevronLeft className="h-4 w-4" />
                                     </Button>
-                                    <span className="text-sm font-medium text-slate-600 px-2">
+                                    <span className="px-2 text-sm font-medium text-slate-600">
                                         {currentPage} / {totalPages}
                                     </span>
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                        onClick={() =>
+                                            setCurrentPage((p) =>
+                                                Math.min(totalPages, p + 1),
+                                            )
+                                        }
                                         disabled={currentPage === totalPages}
                                         className="h-8 w-8 p-0"
                                         title="Next Page"
@@ -317,7 +386,9 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => setCurrentPage(totalPages)}
+                                        onClick={() =>
+                                            setCurrentPage(totalPages)
+                                        }
                                         disabled={currentPage === totalPages}
                                         className="h-8 w-8 p-0"
                                         title="Last Page"
@@ -338,11 +409,19 @@ export default function EventShow({ event, categories, activeCategory, leaderboa
                 eventSlug={event.slug}
                 categorySlug={activeCategory?.slug ?? ''}
                 certificateEnabled={activeCategory?.certificateEnabled}
-                certificateAvailabilityDate={event.certificate_availability_date}
+                certificateAvailabilityDate={
+                    event.certificate_availability_date
+                }
                 elevationData={elevationData}
                 elevationWaypoints={elevationWaypoints}
-                categoryTotalDistance={categories.find(c => c.slug === activeCategory?.slug)?.totalDistance}
-                categoryTotalElevationGain={categories.find(c => c.slug === activeCategory?.slug)?.totalElevationGain}
+                categoryTotalDistance={
+                    categories.find((c) => c.slug === activeCategory?.slug)
+                        ?.totalDistance
+                }
+                categoryTotalElevationGain={
+                    categories.find((c) => c.slug === activeCategory?.slug)
+                        ?.totalElevationGain
+                }
             />
         </>
     );

@@ -1,5 +1,6 @@
 import { PageHeader } from '@/components/admin/page-header';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
@@ -25,8 +26,11 @@ export default function EventEdit({ event }: Props) {
         start_date: event.start_date.split('T')[0],
         end_date: event.end_date.split('T')[0],
         certificate_availability_date: event.certificate_availability_date
-            ? new Date(event.certificate_availability_date).toISOString().slice(0, 16)
+            ? new Date(event.certificate_availability_date)
+                  .toISOString()
+                  .slice(0, 16)
             : '',
+        is_lap_based: event.is_lap_based ?? false,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -53,11 +57,15 @@ export default function EventEdit({ event }: Props) {
                                 <Input
                                     id="title"
                                     value={data.title}
-                                    onChange={(e) => setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('title', e.target.value)
+                                    }
                                     placeholder="e.g. Lelono Ultra 2026"
                                 />
                                 {errors.title && (
-                                    <p className="text-sm text-destructive">{errors.title}</p>
+                                    <p className="text-sm text-destructive">
+                                        {errors.title}
+                                    </p>
                                 )}
                             </div>
 
@@ -66,11 +74,15 @@ export default function EventEdit({ event }: Props) {
                                 <Input
                                     id="slug"
                                     value={data.slug}
-                                    onChange={(e) => setData('slug', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('slug', e.target.value)
+                                    }
                                     placeholder="e.g. lelono-ultra-2026"
                                 />
                                 {errors.slug && (
-                                    <p className="text-sm text-destructive">{errors.slug}</p>
+                                    <p className="text-sm text-destructive">
+                                        {errors.slug}
+                                    </p>
                                 )}
                             </div>
 
@@ -79,11 +91,15 @@ export default function EventEdit({ event }: Props) {
                                 <Input
                                     id="location"
                                     value={data.location}
-                                    onChange={(e) => setData('location', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('location', e.target.value)
+                                    }
                                     placeholder="e.g. Malang, East Java"
                                 />
                                 {errors.location && (
-                                    <p className="text-sm text-destructive">{errors.location}</p>
+                                    <p className="text-sm text-destructive">
+                                        {errors.location}
+                                    </p>
                                 )}
                             </div>
                         </div>
@@ -95,12 +111,19 @@ export default function EventEdit({ event }: Props) {
                         <div className="space-y-4">
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor="start_date">Start Date *</Label>
+                                    <Label htmlFor="start_date">
+                                        Start Date *
+                                    </Label>
                                     <Input
                                         id="start_date"
                                         type="date"
                                         value={data.start_date}
-                                        onChange={(e) => setData('start_date', e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                'start_date',
+                                                e.target.value,
+                                            )
+                                        }
                                     />
                                     {errors.start_date && (
                                         <p className="text-sm text-destructive">
@@ -114,10 +137,14 @@ export default function EventEdit({ event }: Props) {
                                         id="end_date"
                                         type="date"
                                         value={data.end_date}
-                                        onChange={(e) => setData('end_date', e.target.value)}
+                                        onChange={(e) =>
+                                            setData('end_date', e.target.value)
+                                        }
                                     />
                                     {errors.end_date && (
-                                        <p className="text-sm text-destructive">{errors.end_date}</p>
+                                        <p className="text-sm text-destructive">
+                                            {errors.end_date}
+                                        </p>
                                     )}
                                 </div>
                             </div>
@@ -134,7 +161,10 @@ export default function EventEdit({ event }: Props) {
                                     type="datetime-local"
                                     value={data.certificate_availability_date}
                                     onChange={(e) =>
-                                        setData('certificate_availability_date', e.target.value)
+                                        setData(
+                                            'certificate_availability_date',
+                                            e.target.value,
+                                        )
                                     }
                                 />
                                 <p className="text-xs text-muted-foreground">
@@ -149,13 +179,40 @@ export default function EventEdit({ event }: Props) {
                         </div>
                     </div>
 
+                    {/* Lap Settings */}
+                    <div className="rounded-lg border bg-card p-4 md:p-6">
+                        <h2 className="mb-4 font-medium">Lap Settings</h2>
+                        <div className="space-y-4">
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="is_lap_based"
+                                    checked={data.is_lap_based}
+                                    onCheckedChange={(checked) =>
+                                        setData(
+                                            'is_lap_based',
+                                            checked as boolean,
+                                        )
+                                    }
+                                />
+                                <Label htmlFor="is_lap_based">
+                                    Lap-based event
+                                    <span className="ml-1 text-xs text-muted-foreground">
+                                        (enable lap tracking and stats)
+                                    </span>
+                                </Label>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Actions */}
                     <div className="flex gap-2">
                         <Button type="submit" disabled={processing}>
                             {processing ? 'Saving...' : 'Save Changes'}
                         </Button>
                         <Button variant="outline" asChild>
-                            <Link href={`/admin/events/${event.slug}`}>Cancel</Link>
+                            <Link href={`/admin/events/${event.slug}`}>
+                                Cancel
+                            </Link>
                         </Button>
                     </div>
                 </form>

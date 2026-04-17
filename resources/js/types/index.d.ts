@@ -52,6 +52,7 @@ export interface Event {
     start_date: string;
     end_date: string;
     certificate_availability_date?: string;
+    is_lap_based?: boolean;
     created_at: string;
     updated_at: string;
     categories?: Category[];
@@ -68,6 +69,7 @@ export interface Category {
     total_elevation_gain: number | null;
     start_time: string | null;
     cut_off_time: string | null;
+    lap_stats_config?: LapStatsConfig | null;
     created_at: string;
     updated_at: string;
     event?: Event;
@@ -100,3 +102,11 @@ export interface Certificate {
     updated_at: string;
 }
 
+export interface LapStatsConfig {
+    total_laps_field?: string;
+    best_lap_field?: string;
+    avg_lap_field?: string;
+    current_cp_field?: string;
+    cp_time_field?: string;
+    segment_field?: string;
+}

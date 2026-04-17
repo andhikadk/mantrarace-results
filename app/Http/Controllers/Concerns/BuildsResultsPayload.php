@@ -60,11 +60,13 @@ trait BuildsResultsPayload
             'activeCategory' => $category ? [
                 'slug' => $category->slug,
                 'certificateEnabled' => $category->certificate?->enabled ?? false,
+                'lapStatsConfig' => $category->lap_stats_config,
             ] : null,
             'leaderboard' => $leaderboard,
             'elevationData' => $gpxData['elevation'],
             'elevationWaypoints' => $gpxData['waypoints'],
             'isLive' => $isLive,
+            'isLapBased' => $event->is_lap_based ?? false,
         ];
     }
 }

@@ -36,6 +36,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('fonts', [Admin\FontController::class, 'index'])->name('fonts.index');
         Route::post('fonts', [Admin\FontController::class, 'store'])->name('fonts.store');
         Route::delete('fonts', [Admin\FontController::class, 'destroy'])->name('fonts.destroy');
+
+        // DEBUG ROUTE - REMOVE AFTER TESTING
+        Route::get('debug/category/{category:slug}', function (App\Models\Category $category) {
+            $category->load('event');
+
+            return [
+                'category' => $category,
+                'event' => $category->event,
+                'is_lap_based_value' => $category->event?->is_lap_based,
+            ];
+        });
     });
 });
 

@@ -15,7 +15,25 @@ class Category extends Model
             'total_elevation_gain' => 'float',
             'start_time' => 'datetime',
             'cut_off_time' => 'datetime',
+            'lap_stats_config' => 'array',
         ];
+    }
+
+    public function getLapStatsConfigAttribute($value): array
+    {
+        return $value ?? [
+            'total_laps_field' => 'Laps',
+            'best_lap_field' => 'BestLap',
+            'avg_lap_field' => 'Avg.Lap',
+            'current_cp_field' => 'CP',
+            'cp_time_field' => 'CPmin',
+            'segment_field' => 'Segment',
+        ];
+    }
+
+    public function isLapBased(): bool
+    {
+        return $this->event->is_lap_based ?? false;
     }
 
     public function getRouteKeyName(): string
