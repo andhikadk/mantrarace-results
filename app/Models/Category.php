@@ -21,14 +21,18 @@ class Category extends Model
 
     public function getLapStatsConfigAttribute($value): array
     {
-        return $value ?? [
-            'total_laps_field' => 'Laps',
-            'best_lap_field' => 'BestLap',
-            'avg_lap_field' => 'Avg.Lap',
-            'current_cp_field' => 'CP',
-            'cp_time_field' => 'CPmin',
-            'segment_field' => 'Segment',
-        ];
+        if (! is_array($value)) {
+            return [
+                'total_laps_field' => 'Laps',
+                'best_lap_field' => 'BestLap',
+                'avg_lap_field' => 'Avg.Lap',
+                'current_cp_field' => 'CP',
+                'cp_time_field' => 'CPmin',
+                'segment_field' => 'Segment',
+            ];
+        }
+
+        return $value;
     }
 
     public function isLapBased(): bool
@@ -59,5 +63,15 @@ class Category extends Model
     public function certificate()
     {
         return $this->hasOne(Certificate::class);
+    }
+
+    public function result()
+    {
+        return $this->hasOne(CategoryResult::class);
+    }
+
+    public function isResultLocked(): bool
+    {
+        return $this->result?->isLocked() ?? false;
     }
 }

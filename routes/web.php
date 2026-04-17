@@ -33,6 +33,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('categories/{category}/gpx', [Admin\GpxController::class, 'destroy'])
             ->name('categories.gpx.destroy');
 
+        Route::get('categories/{category}/results/status', [Admin\CategoryResultController::class, 'status'])
+            ->name('categories.results.status');
+        Route::post('categories/{category}/results/finalize', [Admin\CategoryResultController::class, 'finalize'])
+            ->name('categories.results.finalize');
+        Route::post('categories/{category}/results/lock', [Admin\CategoryResultController::class, 'lock'])
+            ->name('categories.results.lock');
+        Route::post('categories/{category}/results/unlock', [Admin\CategoryResultController::class, 'unlock'])
+            ->name('categories.results.unlock');
+        Route::post('categories/{category}/results/refresh', [Admin\CategoryResultController::class, 'refresh'])
+            ->name('categories.results.refresh');
+        Route::delete('categories/{category}/results', [Admin\CategoryResultController::class, 'destroy'])
+            ->name('categories.results.destroy');
+
         Route::get('fonts', [Admin\FontController::class, 'index'])->name('fonts.index');
         Route::post('fonts', [Admin\FontController::class, 'store'])->name('fonts.store');
         Route::delete('fonts', [Admin\FontController::class, 'destroy'])->name('fonts.destroy');

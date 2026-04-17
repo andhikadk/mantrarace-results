@@ -8,6 +8,7 @@ use App\Data\LapStatsData;
 use App\Data\ParticipantData;
 use App\Jobs\RefreshRaceResultCache;
 use App\Models\Category;
+use App\Models\CategoryResult;
 use App\Models\Checkpoint;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Collection;
@@ -27,6 +28,12 @@ class RaceResultService
      */
     public function getLeaderboardPayload(Category $category): array
     {
+        $category->loadMissing('result');
+
+        if ($category->isResultLocked()) {
+            return $this->getFromSnapshot($category);
+        }
+
         $payload = $this->getCachedPayload($category);
 
         if ($payload !== null) {
@@ -36,6 +43,36 @@ class RaceResultService
         $payload = $this->refreshLeaderboardCache($category);
 
         return $payload['items'];
+    }
+
+    /**
+     * Get leaderboard from snapshot (when results are locked).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function getFromSnapshot(Category $category): array
+    {
+        $result = $category->result;
+
+        return $result?->participants ?? [];
+    }
+
+    /**
+     * Save snapshot and lock results.
+     */
+    public function saveSnapshot(Category $category, bool $lock = true): CategoryResult
+    {
+        $payload = $this->refreshLeaderboardCache($category);
+
+        return CategoryResult::updateOrCreate(
+            ['category_id' => $category->id],
+            [
+                'participants' => $payload['items'],
+                'total_participants' => count($payload['items']),
+                'fetched_at' => now(),
+                'locked_at' => $lock ? now() : null,
+            ]
+        );
     }
 
     /**
