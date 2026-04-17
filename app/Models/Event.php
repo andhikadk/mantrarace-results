@@ -19,6 +19,7 @@ class Event extends Model
             'start_date' => 'datetime',
             'end_date' => 'datetime',
             'is_lap_based' => 'boolean',
+            'is_cot_based' => 'boolean',
         ];
     }
 

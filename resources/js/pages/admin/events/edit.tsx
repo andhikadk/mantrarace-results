@@ -19,7 +19,16 @@ export default function EventEdit({ event }: Props) {
         { title: 'Edit', href: `/admin/events/${event.slug}/edit` },
     ];
 
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, processing, errors } = useForm<{
+        title: string;
+        slug: string;
+        location: string;
+        start_date: string;
+        end_date: string;
+        certificate_availability_date: string;
+        is_lap_based: boolean;
+        is_cot_based: boolean;
+    }>({
         title: event.title,
         slug: event.slug,
         location: event.location,
@@ -31,6 +40,7 @@ export default function EventEdit({ event }: Props) {
                   .slice(0, 16)
             : '',
         is_lap_based: event.is_lap_based ?? false,
+        is_cot_based: event.is_cot_based ?? false,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -198,6 +208,24 @@ export default function EventEdit({ event }: Props) {
                                     Lap-based event
                                     <span className="ml-1 text-xs text-muted-foreground">
                                         (enable lap tracking and stats)
+                                    </span>
+                                </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="is_cot_based"
+                                    checked={data.is_cot_based}
+                                    onCheckedChange={(checked) =>
+                                        setData(
+                                            'is_cot_based',
+                                            checked as boolean,
+                                        )
+                                    }
+                                />
+                                <Label htmlFor="is_cot_based">
+                                    COT-based event
+                                    <span className="ml-1 text-xs text-muted-foreground">
+                                        (duration-based finish time)
                                     </span>
                                 </Label>
                             </div>

@@ -36,6 +36,11 @@ class Category extends Model
         return $this->event->is_lap_based ?? false;
     }
 
+    public function isCotBased(): bool
+    {
+        return $this->event->is_cot_based ?? false;
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

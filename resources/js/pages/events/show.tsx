@@ -54,6 +54,7 @@ interface Props {
     elevationWaypoints: ElevationWaypoint[];
     isLive: boolean;
     isLapBased: boolean;
+    isCotBased: boolean;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -71,6 +72,7 @@ export default function EventShow({
     elevationWaypoints,
     isLive,
     isLapBased,
+    isCotBased,
 }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
     const [genderFilter, setGenderFilter] = useState(DEFAULT_GENDER_FILTER);
@@ -335,6 +337,7 @@ export default function EventShow({
                                                 )
                                             }
                                             isLapBased={isLapBased}
+                                            isCotBased={isCotBased}
                                         />
                                     ),
                                 )}

@@ -67,6 +67,7 @@ trait BuildsResultsPayload
             'elevationWaypoints' => $gpxData['waypoints'],
             'isLive' => $isLive,
             'isLapBased' => $event->is_lap_based ?? false,
+            'isCotBased' => $event->is_cot_based ?? false,
         ];
     }
 }

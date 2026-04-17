@@ -47,6 +47,7 @@ interface Props {
     onClick: () => void;
     isLive?: boolean;
     isLapBased?: boolean;
+    isCotBased?: boolean;
 }
 
 function StatusBadge({ status, isCot }: { status: string; isCot?: boolean }) {
@@ -77,7 +78,12 @@ function GenderIcon({ gender }: { gender: string }) {
     return <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" />;
 }
 
-export function ParticipantCard({ participant, onClick, isLapBased }: Props) {
+export function ParticipantCard({
+    participant,
+    onClick,
+    isLapBased,
+    isCotBased,
+}: Props) {
     const displayStatus = getDisplayStatus(participant.status);
     const flagCode = getFlagCode(participant.nation);
     const normalizedGen =
@@ -158,21 +164,28 @@ export function ParticipantCard({ participant, onClick, isLapBased }: Props) {
                                     </div>
                                 </div>
 
-                                {/* TIME or LAP */}
+                                {/* TIME or LAP or TOTAL TIME */}
                                 <div className="text-right">
                                     <div className="mb-0.5 text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
-                                        {isLapBased && participant.lapStats
-                                            ? 'LAP'
-                                            : 'TIME'}
+                                        {isCotBased
+                                            ? 'TOTAL'
+                                            : isLapBased && participant.lapStats
+                                              ? 'LAP'
+                                              : 'TIME'}
                                     </div>
                                     <div className="font-mono text-base font-bold text-slate-900 dark:text-slate-100">
-                                        {isLapBased && participant.lapStats
-                                            ? (participant.lapStats.totalLaps ??
-                                              '-')
-                                            : displayStatus === 'FINISHED'
-                                              ? participant.finishTime ||
-                                                '--:--:--'
-                                              : '--:--:--'}
+                                        {isCotBased
+                                            ? displayStatus === 'FINISHED'
+                                                ? participant.finishTime ||
+                                                  '--:--:--'
+                                                : '--:--:--'
+                                            : isLapBased && participant.lapStats
+                                              ? (participant.lapStats
+                                                    .totalLaps ?? '-')
+                                              : displayStatus === 'FINISHED'
+                                                ? participant.finishTime ||
+                                                  '--:--:--'
+                                                : '--:--:--'}
                                     </div>
                                 </div>
 
@@ -255,7 +268,7 @@ export function ParticipantCard({ participant, onClick, isLapBased }: Props) {
 
                     <div className="w-28 text-right">
                         <div className="text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
-                            FINISH TIME
+                            {isCotBased ? 'TOTAL TIME' : 'FINISH TIME'}
                         </div>
                         <div className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
                             {displayStatus === 'FINISHED'

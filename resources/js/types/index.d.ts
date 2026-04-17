@@ -53,6 +53,7 @@ export interface Event {
     end_date: string;
     certificate_availability_date?: string;
     is_lap_based?: boolean;
+    is_cot_based?: boolean;
     created_at: string;
     updated_at: string;
     categories?: Category[];

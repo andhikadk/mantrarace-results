@@ -14,7 +14,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function EventCreate() {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm<{
+        title: string;
+        slug: string;
+        location: string;
+        start_date: string;
+        end_date: string;
+        certificate_availability_date: string;
+        is_lap_based: boolean;
+        is_cot_based: boolean;
+    }>({
         title: '',
         slug: '',
         location: '',
@@ -22,6 +31,7 @@ export default function EventCreate() {
         end_date: '',
         certificate_availability_date: '',
         is_lap_based: false,
+        is_cot_based: false,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -194,6 +204,24 @@ export default function EventCreate() {
                                     Lap-based event
                                     <span className="ml-1 text-xs text-muted-foreground">
                                         (enable lap tracking and stats)
+                                    </span>
+                                </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="is_cot_based"
+                                    checked={data.is_cot_based}
+                                    onCheckedChange={(checked) =>
+                                        setData(
+                                            'is_cot_based',
+                                            checked as boolean,
+                                        )
+                                    }
+                                />
+                                <Label htmlFor="is_cot_based">
+                                    COT-based event
+                                    <span className="ml-1 text-xs text-muted-foreground">
+                                        (duration-based finish time)
                                     </span>
                                 </Label>
                             </div>
