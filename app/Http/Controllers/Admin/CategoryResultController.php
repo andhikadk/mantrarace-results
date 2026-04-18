@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Event;
 use App\Services\RaceResultService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -72,5 +73,62 @@ class CategoryResultController extends Controller
         return redirect()
             ->route('admin.categories.edit', $category)
             ->with('success', 'Results refreshed (draft).');
+    }
+
+    public function bulkFinalize(Request $request, Event $event, RaceResultService $service): RedirectResponse
+    {
+        $categoryIds = $request->input('category_ids', []);
+
+        if (empty($categoryIds)) {
+            return back()->with('error', 'No categories selected.');
+        }
+
+        $categories = $event->categories->whereIn('id', $categoryIds);
+        $locked = 0;
+
+        foreach ($categories as $category) {
+            $service->saveSnapshot($category, true);
+            $locked++;
+        }
+
+        return back()->with('success', "{$locked} category(ies) finalized and locked.");
+    }
+
+    public function bulkUnlock(Request $request, Event $event): RedirectResponse
+    {
+        $categoryIds = $request->input('category_ids', []);
+
+        if (empty($categoryIds)) {
+            return back()->with('error', 'No categories selected.');
+        }
+
+        $categories = $event->categories->whereIn('id', $categoryIds);
+        $unlocked = 0;
+
+        foreach ($categories as $category) {
+            $category->result?->unlock();
+            $unlocked++;
+        }
+
+        return back()->with('success', "{$unlocked} category(ies) unlocked.");
+    }
+
+    public function bulkDelete(Request $request, Event $event): RedirectResponse
+    {
+        $categoryIds = $request->input('category_ids', []);
+
+        if (empty($categoryIds)) {
+            return back()->with('error', 'No categories selected.');
+        }
+
+        $categories = $event->categories->whereIn('id', $categoryIds);
+        $deleted = 0;
+
+        foreach ($categories as $category) {
+            $category->result?->delete();
+            $deleted++;
+        }
+
+        return back()->with('success', "{$deleted} snapshot(s) deleted.");
     }
 }

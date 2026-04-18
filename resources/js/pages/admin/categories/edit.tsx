@@ -59,11 +59,7 @@ const sections: { id: SectionId; label: string; icon: typeof Settings2 }[] = [
     { id: 'certificate', label: 'Certificate', icon: Award },
 ];
 
-export default function CategoryEdit({
-    category,
-    event,
-    event_is_lap_based,
-}: Props) {
+export default function CategoryEdit({ category, event_is_lap_based }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
         { title: 'Events', href: '/admin/events' },

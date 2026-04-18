@@ -46,6 +46,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('categories/{category}/results', [Admin\CategoryResultController::class, 'destroy'])
             ->name('categories.results.destroy');
 
+        Route::post('events/{event}/results/finalize', [Admin\CategoryResultController::class, 'bulkFinalize'])
+            ->name('events.results.finalize');
+        Route::post('events/{event}/results/unlock', [Admin\CategoryResultController::class, 'bulkUnlock'])
+            ->name('events.results.unlock');
+        Route::delete('events/{event}/results', [Admin\CategoryResultController::class, 'bulkDelete'])
+            ->name('events.results.destroy');
+
         Route::get('fonts', [Admin\FontController::class, 'index'])->name('fonts.index');
         Route::post('fonts', [Admin\FontController::class, 'store'])->name('fonts.store');
         Route::delete('fonts', [Admin\FontController::class, 'destroy'])->name('fonts.destroy');

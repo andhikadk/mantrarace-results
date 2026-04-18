@@ -58,8 +58,22 @@ class EventController extends Controller
             $query->withCount('checkpoints');
         }]);
 
+        $event->load(['categories.result']);
+
+        $categoriesWithStatus = $event->categories->map(fn ($cat) => [
+            'id' => $cat->id,
+            'name' => $cat->name,
+            'slug' => $cat->slug,
+            'hasSnapshot' => (bool) $cat->result,
+            'isLocked' => $cat->isResultLocked(),
+            'fetchedAt' => $cat->result?->fetched_at?->toIso8601String(),
+            'lockedAt' => $cat->result?->locked_at?->toIso8601String(),
+            'totalParticipants' => $cat->result?->total_participants,
+        ]);
+
         return Inertia::render('admin/events/show', [
             'event' => $event,
+            'categoryResultsStatus' => $categoriesWithStatus,
         ]);
     }
 
