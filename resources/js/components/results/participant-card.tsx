@@ -166,14 +166,32 @@ export function ParticipantCard({
 
                                 {/* TIME or LAP or TOTAL TIME */}
                                 <div className="text-right">
-                                    <div className="mb-0.5 text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
+                                    {/* Mobile label */}
+                                    <div className="mb-0.5 text-[10px] font-bold text-slate-400 uppercase md:hidden dark:text-slate-500">
+                                        {isLapBased && participant.lapStats
+                                            ? 'LAP'
+                                            : 'TIME'}
+                                    </div>
+                                    {/* Desktop label */}
+                                    <div className="mb-0.5 hidden text-[10px] font-bold text-slate-400 uppercase md:block dark:text-slate-500">
                                         {isCotBased
                                             ? 'TOTAL'
                                             : isLapBased && participant.lapStats
                                               ? 'LAP'
                                               : 'TIME'}
                                     </div>
-                                    <div className="font-mono text-base font-bold text-slate-900 dark:text-slate-100">
+                                    {/* Mobile value */}
+                                    <div className="font-mono text-base font-bold text-slate-900 md:hidden dark:text-slate-100">
+                                        {isLapBased && participant.lapStats
+                                            ? (participant.lapStats.totalLaps ??
+                                              '-')
+                                            : displayStatus === 'FINISHED'
+                                              ? participant.finishTime ||
+                                                '--:--:--'
+                                              : '--:--:--'}
+                                    </div>
+                                    {/* Desktop value */}
+                                    <div className="hidden font-mono text-base font-bold text-slate-900 md:block dark:text-slate-100">
                                         {isCotBased
                                             ? displayStatus === 'FINISHED'
                                                 ? participant.finishTime ||
