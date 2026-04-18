@@ -499,6 +499,9 @@ class RaceResultService
         $startTime = $category->start_time;
         $cutOffTime = $category->cut_off_time;
 
+        // Ensure event relationship is loaded for sorting logic
+        $category->load('event');
+
         // Check if event has ended (use end_date, fallback to start_date)
         $eventDate = $category->event?->end_date ?? $category->event?->start_date;
         $isEventEnded = $eventDate && $eventDate->isPast();
@@ -507,7 +510,7 @@ class RaceResultService
         $mapped = collect($rawData)
             ->map(fn (array $row) => $this->mapParticipant($row, $checkpoints, $startTime, $cutOffTime, $isEventEnded, $category));
 
-        $mapped = $mapped->sort(function (ParticipantData $a, ParticipantData $b) {
+        $mapped = $mapped->sort(function (ParticipantData $a, ParticipantData $b) use ($category) {
             $isFinishedA = $this->isFinishedStatus($a->status);
             $isFinishedB = $this->isFinishedStatus($b->status);
             $isDnfDnsA = $this->isDnfOrDnsStatus($a->status);
@@ -563,9 +566,35 @@ class RaceResultService
                 return strnatcmp($a->bib, $b->bib);
             }
 
-            // 1. Priority: Finished Participants - Sort by finish time
+            // Check if category is lap-based
+            $isLapBased = $category->event?->is_lap_based ?? false;
+
+            // For lap-based races, get laps for sorting
+            if ($isLapBased) {
+                $lapsA = (int) ($a->lapStats?->totalLaps ?? 0);
+                $lapsB = (int) ($b->lapStats?->totalLaps ?? 0);
+            }
+
+            // 1. Priority: Finished Participants
             if ($isFinishedA && $isFinishedB) {
-                // Convert finish times to seconds for proper comparison
+                if ($isLapBased) {
+                    // Sort by Total Laps DESC first (more laps = higher rank), then by finish time ASC
+                    if ($lapsA !== $lapsB) {
+                        return $lapsB <=> $lapsA; // DESC: more laps first
+                    }
+
+                    // Same laps: sort by finish time ASC
+                    $secondsA = $this->timeToSeconds($a->finishTime);
+                    $secondsB = $this->timeToSeconds($b->finishTime);
+
+                    if ($secondsA === $secondsB) {
+                        return strnatcmp($a->bib, $b->bib);
+                    }
+
+                    return $secondsA <=> $secondsB;
+                }
+
+                // Regular sort by finish time
                 $secondsA = $this->timeToSeconds($a->finishTime);
                 $secondsB = $this->timeToSeconds($b->finishTime);
 
@@ -582,7 +611,45 @@ class RaceResultService
                 return 1;
             }
 
-            // 2. Priority: Furthest Checkpoint Reached (Last Position)
+            // 2. Non-Finished Participants Sorting
+            if ($isLapBased) {
+                // Sort by Total Laps DESC first, then by last checkpoint reached
+                if ($lapsA !== $lapsB) {
+                    return $lapsB <=> $lapsA;
+                }
+
+                // Same laps: sort by furthest checkpoint reached
+                $lastCpIndexA = -1;
+                foreach ($a->checkpoints as $index => $cp) {
+                    if (! empty($cp->time)) {
+                        $lastCpIndexA = $index;
+                    }
+                }
+
+                $lastCpIndexB = -1;
+                foreach ($b->checkpoints as $index => $cp) {
+                    if (! empty($cp->time)) {
+                        $lastCpIndexB = $index;
+                    }
+                }
+
+                if ($lastCpIndexA !== $lastCpIndexB) {
+                    return $lastCpIndexB <=> $lastCpIndexA;
+                }
+
+                // Same checkpoint: sort by rank at that checkpoint
+                if ($lastCpIndexA >= 0) {
+                    $cpRankA = $a->checkpoints[$lastCpIndexA]->overallRank ?? PHP_INT_MAX;
+                    $cpRankB = $b->checkpoints[$lastCpIndexB]->overallRank ?? PHP_INT_MAX;
+                    if ($cpRankA !== $cpRankB) {
+                        return $cpRankA <=> $cpRankB;
+                    }
+                }
+
+                return strnatcmp($a->bib, $b->bib);
+            }
+
+            // 3. Regular Non-Finished: Furthest Checkpoint Reached
             // Calculate last reached CP index for A
             $lastCpIndexA = -1;
             foreach ($a->checkpoints as $index => $cp) {
