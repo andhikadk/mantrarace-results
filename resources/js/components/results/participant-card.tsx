@@ -164,31 +164,47 @@ export function ParticipantCard({
                                     </div>
                                 </div>
 
+                                {/* LAP (mobile only, untuk COT+lap event agar totalLaps tetap tampil di samping TOTAL TIME) */}
+                                {isCotBased && isLapBased && (
+                                    <div className="text-right md:hidden">
+                                        <div className="mb-0.5 text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
+                                            LAP
+                                        </div>
+                                        <div className="font-mono text-base font-bold text-slate-900 dark:text-slate-100">
+                                            {participant.lapStats?.totalLaps ?? '-'}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* TIME or LAP or TOTAL TIME */}
                                 <div className="text-right">
                                     {/* Mobile label */}
                                     <div className="mb-0.5 text-[10px] font-bold text-slate-400 uppercase md:hidden dark:text-slate-500">
-                                        {isLapBased && participant.lapStats
-                                            ? 'LAP'
-                                            : 'TIME'}
+                                        {isCotBased
+                                            ? 'TOTAL TIME'
+                                            : isLapBased
+                                              ? 'LAP'
+                                              : 'TIME'}
                                     </div>
                                     {/* Desktop label */}
                                     <div className="mb-0.5 hidden text-[10px] font-bold text-slate-400 uppercase md:block dark:text-slate-500">
                                         {isCotBased
                                             ? 'TOTAL'
-                                            : isLapBased && participant.lapStats
+                                            : isLapBased
                                               ? 'LAP'
                                               : 'TIME'}
                                     </div>
                                     {/* Mobile value */}
                                     <div className="font-mono text-base font-bold text-slate-900 md:hidden dark:text-slate-100">
-                                        {isLapBased && participant.lapStats
-                                            ? (participant.lapStats.totalLaps ??
-                                              '-')
-                                            : displayStatus === 'FINISHED'
-                                              ? participant.finishTime ||
-                                                '--:--:--'
-                                              : '--:--:--'}
+                                        {isCotBased
+                                            ? displayStatus === 'FINISHED'
+                                                ? participant.finishTime || '--:--:--'
+                                                : '--:--:--'
+                                            : isLapBased
+                                              ? (participant.lapStats?.totalLaps ?? '-')
+                                              : displayStatus === 'FINISHED'
+                                                ? participant.finishTime || '--:--:--'
+                                                : '--:--:--'}
                                     </div>
                                     {/* Desktop value */}
                                     <div className="hidden font-mono text-base font-bold text-slate-900 md:block dark:text-slate-100">
@@ -197,9 +213,9 @@ export function ParticipantCard({
                                                 ? participant.finishTime ||
                                                   '--:--:--'
                                                 : '--:--:--'
-                                            : isLapBased && participant.lapStats
+                                            : isLapBased
                                               ? (participant.lapStats
-                                                    .totalLaps ?? '-')
+                                                    ?.totalLaps ?? '-')
                                               : displayStatus === 'FINISHED'
                                                 ? participant.finishTime ||
                                                   '--:--:--'
@@ -334,14 +350,14 @@ export function ParticipantCard({
                         />
                     </div>
 
-                    {isLapBased && participant.lapStats && (
+                    {isLapBased && (
                         <div className="flex gap-4 border-l pl-4">
                             <div className="text-center">
                                 <div className="text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
                                     LAPS
                                 </div>
                                 <div className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                    {participant.lapStats.totalLaps ?? '-'}
+                                    {participant.lapStats?.totalLaps ?? '-'}
                                 </div>
                             </div>
                             <div className="text-center">
@@ -349,7 +365,7 @@ export function ParticipantCard({
                                     BEST
                                 </div>
                                 <div className="font-mono text-sm font-semibold text-green-600 dark:text-green-400">
-                                    {participant.lapStats.bestLap ?? '-'}
+                                    {participant.lapStats?.bestLap ?? '-'}
                                 </div>
                             </div>
                             <div className="text-center">
@@ -357,7 +373,7 @@ export function ParticipantCard({
                                     AVG
                                 </div>
                                 <div className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                    {participant.lapStats.avgLap ?? '-'}
+                                    {participant.lapStats?.avgLap ?? '-'}
                                 </div>
                             </div>
                         </div>

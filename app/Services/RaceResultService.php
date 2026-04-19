@@ -145,41 +145,40 @@ class RaceResultService
     {
         $status = $row['Status'] ?? '';
 
-        // Convert "Yet to Start" to "DNS" if event has ended
-        if ($isEventEnded && $this->isYetToStartStatus($status)) {
-            $status = 'DNS';
+        $isCotBasedEvent = $category?->isCotBased() ?? false;
+        $cotTimePassed = $cutOffTime && $cutOffTime->isPast();
+
+        if ($isCotBasedEvent) {
+            // COT-based: after COT all participants are FINISHED, before COT keep API status as-is
+            if ($cotTimePassed) {
+                $status = 'FINISHED';
+            }
+        } else {
+            // Regular event: convert statuses based on event end date
+            if ($isEventEnded && $this->isYetToStartStatus($status)) {
+                $status = 'DNS';
+            }
+            if ($isEventEnded && ! $this->isFinishedStatus($status) && ! $this->isDnfOrDnsStatus($status)) {
+                $status = 'DNF';
+            }
         }
 
-        // Convert to "DNF" if event ended but participant not finished (e.g. "Started" status)
-        if ($isEventEnded && ! $this->isFinishedStatus($status) && ! $this->isDnfOrDnsStatus($status)) {
-            $status = 'DNF';
-        }
-
-        $finishTime = $this->cleanTimeValue($row['Finish Time'] ?? null);
+        $finishTime = $this->cleanTimeValue($row['Finish Time'] ?? $row['Finish'] ?? null);
         $isFinished = $this->isFinishedStatus($status);
 
-        // Check COT: If finished but elapsed time exceeds cut off time
+        // isCot: only relevant for regular events where participant finished past cut-off time
         $isCot = false;
-        if ($isFinished && $startTime && $cutOffTime && $finishTime) {
+        if (! $isCotBasedEvent && $isFinished && $startTime && $cutOffTime && $finishTime) {
             $cutOffSeconds = $cutOffTime->getTimestamp() - $startTime->getTimestamp();
             $finishSeconds = $this->timeToSeconds($finishTime);
-            Log::debug('COT Check', [
-                'bib' => $row['BIB'] ?? '',
-                'startTime' => $startTime?->format('Y-m-d H:i:s'),
-                'cutOffTime' => $cutOffTime?->format('Y-m-d H:i:s'),
-                'cutOffSeconds' => $cutOffSeconds,
-                'finishTime' => $finishTime,
-                'finishSeconds' => $finishSeconds,
-                'isCot' => $finishSeconds > $cutOffSeconds,
-            ]);
             if ($cutOffSeconds > 0 && $finishSeconds > $cutOffSeconds) {
                 $isCot = true;
             }
         }
 
         $lapStats = null;
-        if ($category && $category->event?->is_lap_based && $category->lap_stats_config) {
-            $config = $category->lap_stats_config;
+        if ($category && $category->event?->is_lap_based) {
+            $config = $category->lap_stats_config ?: [];
             $lapStats = new LapStatsData(
                 totalLaps: $this->cleanValue($row[$config['total_laps_field'] ?? 'Laps'] ?? null),
                 bestLap: $this->cleanTimeValue($row[$config['best_lap_field'] ?? 'BestLap'] ?? null),
@@ -720,6 +719,7 @@ class RaceResultService
                     status: $p->status,
                     checkpoints: $p->checkpoints,
                     isCot: $p->isCot,
+                    lapStats: $p->lapStats,
                 );
             }
 
